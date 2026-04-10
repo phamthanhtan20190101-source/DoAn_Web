@@ -186,6 +186,10 @@
         .volume-bar .current-volume { position: absolute; left: 0; top: 0; height: 100%; width: 50%; background: var(--text-primary); border-radius: 5px; }
 
         /* ================= SELECT2 DARK MODE ================= */
+        .select2-container--default .select2-selection--multiple { background-color: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 5px !important; min-height: 40px !important; }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice { background-color: var(--purple-primary) !important; border: none !important; color: white !important; padding: 4px 10px !important; margin-top: 5px !important; border-radius: 4px !important;}
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove { color: white !important; margin-right: 8px !important; border-right: 1px solid rgba(255,255,255,0.3) !important; padding-right: 5px !important; }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover { background-color: transparent !important; color: #ffbaba !important; }
         .select2-container--default .select2-selection--single { background-color: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; height: 40px !important; border-radius: 5px !important; }
         .select2-container--default .select2-selection--single .select2-selection__rendered { color: #fff !important; line-height: 40px; }
         .select2-dropdown { background-color: #231b2e !important; border: 1px solid var(--purple-primary) !important; color: #fff !important; }
@@ -206,6 +210,9 @@
         .avatar-dropdown.show { display: block; }
         .avatar-dropdown .logout-btn { width: 100%; padding: 10px 0; background: #6f55ff; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; margin-top: 10px; }
     </style>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 <body>
 
@@ -329,11 +336,11 @@
         </div>
         <div class="player-center">
             <div class="control-buttons">
-                <i class="fa-solid fa-shuffle"></i>
-                <i class="fa-solid fa-backward-step"></i>
+                <i class="fa-solid fa-shuffle btn-shuffle"></i>
+                <i class="fa-solid fa-backward-step btn-prev"></i>
                 <i class="fa-regular fa-circle-play btn-play"></i>
-                <i class="fa-solid fa-forward-step"></i>
-                <i class="fa-solid fa-repeat"></i>
+                <i class="fa-solid fa-forward-step btn-next"></i>
+                <i class="fa-solid fa-repeat btn-repeat"></i>
             </div>
             <div class="progress-container">
                 <span class="time-current">00:00</span>
@@ -415,6 +422,31 @@
                 });
         }
 
+        const searchInput = document.querySelector('.search-bar input');
+        let searchTimer;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimer);
+                const query = this.value.trim();
+
+                // Đợi 500ms (0.5 giây) sau khi người dùng ngừng gõ mới tải dữ liệu (Tránh lag server)
+                searchTimer = setTimeout(() => {
+                    if (query.length > 0) {
+                        // Tải trang kết quả tìm kiếm vào vùng main-content
+                        loadContent('search_results.php?q=' + encodeURIComponent(query));
+                        
+                        // Bỏ hiệu ứng sáng của các menu bên trái (vì đang ở trang tìm kiếm)
+                        document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                    } else {
+                        // Nếu xóa trắng ô tìm kiếm thì quay mặc định về Thư viện
+                        loadContent('library.php');
+                        document.querySelector('.menu-item:nth-child(1)').classList.add('active');
+                    }
+                }, 500);
+            });
+        }
+
         function attachAjaxFormHandler() {
             const ajaxForms = mainContent.querySelectorAll('form[data-ajax]');
             ajaxForms.forEach(form => {
@@ -428,12 +460,25 @@
                         body: formData
                     });
                     const result = await res.text();
-                    if (form.dataset.reloadUrl) loadContent(form.dataset.reloadUrl);
-                    else { mainContent.innerHTML = result; attachAjaxFormHandler(); }
+                    
+                    if (form.dataset.reloadUrl) {
+                        // Trạng thái cũ: Chuyển trang ngay lập tức
+                        loadContent(form.dataset.reloadUrl);
+                    } else { 
+                        // In thông báo thành công ra màn hình
+                        mainContent.innerHTML = result; 
+                        attachAjaxFormHandler(); 
+                        
+                        // TÍNH NĂNG MỚI: Nếu form có yêu cầu chờ X giây rồi mới chuyển trang
+                        if (form.dataset.delayReloadUrl) {
+                            setTimeout(() => {
+                                loadContent(form.dataset.delayReloadUrl);
+                            }, 2000); // 2000ms tương đương với 2 giây
+                        }
+                    }
                 });
             });
         }
-
         window.deleteSong = function(songId) {
             if (!confirm('Bạn có chắc muốn xóa bài hát này?')) return;
             fetch('song_action.php', {
@@ -458,12 +503,24 @@
             });
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
+       document.addEventListener('DOMContentLoaded', () => {
             showWelcome();
             document.querySelector('.btn-avatar').addEventListener('click', toggleAvatarDropdown);
             const loginBtn = document.querySelector('.btn-login');
             if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
             if (userInfo.role === 'admin') loadContent('admin_dashboard.php');
+
+            // ================= THÊM MỚI: Xử lý hiệu ứng sáng (active) cho menu trái =================
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Xóa class 'active' khỏi tất cả các menu
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    // Thêm class 'active' vào menu vừa được click
+                    this.classList.add('active');
+                });
+            });
+            // ========================================================================================
         });
 
         window.onclick = function(e) {

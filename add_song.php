@@ -5,54 +5,46 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
     exit();
 }
 
-$servername = "localhost";
-$username = "root";
-$password = "vertrigo";
-$dbname = "song_management";
+$servername = "localhost"; $username = "root"; $password = "vertrigo"; $dbname = "song_management";
 $conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    echo '<div style="color:white;">Không thể kết nối cơ sở dữ liệu.</div>';
-    exit();
-}
 
 $genreResult = $conn->query("SELECT GenreID, Name FROM genres ORDER BY Name ASC");
 $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name ASC");
 ?>
 <h2>Thêm bài hát mới</h2>
 
-<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerText = 'Đang tải lên...';">
+<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-delay-reload-url="add_song.php" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerText = 'Đang tải lên...';">
     <input type="hidden" name="action" value="create">
-    <div style="color: white; display: flex; flex-direction: column; gap: 12px; max-width: 500px;">
+    <div style="color: white; display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin-top: 15px;">
         
         <label>
             Tên bài hát
-            <input type="text" name="title" placeholder="Nhập tên bài hát" required>
+            <input type="text" name="title" placeholder="Nhập tên bài hát" required style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;">
         </label>
 
         <label>
             Ảnh bìa bài hát (Không bắt buộc)
-            <input type="file" name="cover_image" accept="image/*" style="margin-top: 5px;">
+            <input type="file" name="cover_image" accept="image/*" style="margin-top: 5px; width: 100%;">
         </label>
 
         <label>
             File MP3 (.mp3)
-            <input type="file" name="audio_file" accept="audio/mp3,audio/mpeg" required>
+            <input type="file" name="audio_file" accept="audio/mp3,audio/mpeg" required style="margin-top: 5px; width: 100%;">
         </label>
 
         <label>
-            Thể loại
+            Thể loại 
             <select name="genre_id" class="search-select" required style="width: 100%;">
-                <option value="">-- Gõ để tìm thể loại --</option>
+                <option value="">-- Gõ tên thể loại... --</option>
                 <?php while ($genre = $genreResult->fetch_assoc()): ?>
                     <option value="<?php echo $genre['GenreID']; ?>"><?php echo htmlspecialchars($genre['Name'], ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php endwhile; ?>
             </select>
         </label>
 
-        <label>
-            Ca sĩ
-            <select name="artist_id" class="search-select" required style="width: 100%;">
-                <option value="">-- Gõ để tìm ca sĩ --</option>
+       <label>
+            Ca sĩ 
+            <select name="artist_ids[]" class="search-select" multiple="multiple" required style="width: 100%;">
                 <?php while ($artist = $artistResult->fetch_assoc()): ?>
                     <option value="<?php echo $artist['ArtistID']; ?>"><?php echo htmlspecialchars($artist['Name'], ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php endwhile; ?>
@@ -61,43 +53,13 @@ $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name A
 
         <label>
             Ngày phát hành
-            <input type="date" name="release_date" max="<?php echo date('Y-m-d'); ?>" id="releaseDateInput">
+            <input type="date" name="release_date" max="<?php echo date('Y-m-d'); ?>" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;">
         </label>
 
-        <button type="submit" class="btn-admin">Lưu bài hát</button>
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn-admin" style="background-color: var(--purple-primary);">Lưu bài hát</button>
+            <button type="button" class="btn-admin" onclick="loadContent('admin_songs.php')" style="background-color: #4b5563;">Hủy bỏ</button>
+        </div>
     </div>
 </form>
-
-<script>
-    // Kiểm tra dung lượng file nhạc ngay khi vừa chọn xong (Giới hạn 50MB)
-    const fileInput = document.querySelector('input[name="audio_file"]');
-    if (fileInput) {
-        fileInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const maxSize = 50 * 1024 * 1024; // 50MB
-                if (file.size > maxSize) {
-                    alert("Cảnh báo: File nhạc của bạn nặng " + (file.size / (1024*1024)).toFixed(2) + "MB. Vui lòng chọn file dưới 50MB!");
-                    this.value = ""; // Xóa file khỏi ô chọn
-                }
-            }
-        });
-    }
-
-    // Kiểm tra dung lượng ảnh bìa (Nên giới hạn khoảng 2MB cho nhẹ server)
-    const coverInput = document.querySelector('input[name="cover_image"]');
-    if (coverInput) {
-        coverInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const maxSize = 2 * 1024 * 1024; // 2MB
-                if (file.size > maxSize) {
-                    alert("Cảnh báo: Ảnh bìa quá lớn (" + (file.size / (1024*1024)).toFixed(2) + "MB). Vui lòng chọn ảnh dưới 2MB!");
-                    this.value = ""; 
-                }
-            }
-        });
-    }
-</script>
-
 <?php $conn->close(); ?>

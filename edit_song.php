@@ -21,6 +21,7 @@ if ($conn->connect_error) {
     exit();
 }
 
+// Truy vấn lấy dữ liệu bài hát và nối tất cả ID ca sĩ lại với nhau
 $stmt = $conn->prepare('SELECT s.SongID, s.Title, s.ReleaseDate, s.FilePath_URL, s.Duration, s.GenreID, GROUP_CONCAT(sa.ArtistID) AS ArtistIDs
                         FROM songs s
                         LEFT JOIN song_artist sa ON sa.SongID = s.SongID
@@ -42,24 +43,31 @@ $genreResult = $conn->query("SELECT GenreID, Name FROM genres ORDER BY Name ASC"
 $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name ASC");
 $conn->close();
 
-$currentArtistId = intval(explode(',', $song['ArtistIDs'])[0] ?? 0);
+// --- XỬ LÝ DỮ LIỆU CŨ HIỆN TẠI CỦA BÀI HÁT ĐỂ HIỂN THỊ LÊN FORM ---
 $currentGenreId = intval($song['GenreID']);
+
+// Tách chuỗi "1,2" thành mảng [1, 2] ngay tại đây cho an toàn
+$currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['ArtistIDs']) : [];
 ?>
+
 <h2>Sửa bài hát</h2>
-<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-reload-url="admin_songs.php">
+
+<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-delay-reload-url="admin_songs.php">
     <input type="hidden" name="action" value="update">
     <input type="hidden" name="song_id" value="<?php echo $song['SongID']; ?>">
-    <div style="color: white; display: flex; flex-direction: column; gap: 12px; max-width: 500px;">
+    
+    <div style="color: white; display: flex; flex-direction: column; gap: 12px; max-width: 500px; margin-top: 15px;">
         <label>
             Tên bài hát
-            <input type="text" name="title" value="<?php echo htmlspecialchars($song['Title'], ENT_QUOTES, 'UTF-8'); ?>" required>
+            <input type="text" name="title" value="<?php echo htmlspecialchars($song['Title'], ENT_QUOTES, 'UTF-8'); ?>" required style="width: 100%; padding: 8px; margin-top: 5px;">
         </label>
+        
         <label>
             File MP3 mới (nếu muốn đổi)
-            <input type="file" name="audio_file" accept="audio/mp3,audio/mpeg">
+            <input type="file" name="audio_file" accept="audio/mp3,audio/mpeg" style="width: 100%; margin-top: 5px;">
         </label>
         <?php if (!empty($song['FilePath_URL'])): ?>
-            <div style="font-size: 0.9em;">File hiện tại: <a href="<?php echo htmlspecialchars($song['FilePath_URL'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" style="color: #b9f">Mở file</a></div>
+            <div style="font-size: 13px; color: #aaa;">Đang sử dụng: <a href="<?php echo htmlspecialchars($song['FilePath_URL'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" style="color: var(--purple-primary);">Mở file hiện tại</a></div>
         <?php endif; ?>
         
         <label>
@@ -73,19 +81,24 @@ $currentGenreId = intval($song['GenreID']);
         </label>
         
         <label>
-            Ca sĩ
-            <select name="artist_id" class="search-select" required style="width: 100%;">
-                <option value="">-- Gõ để tìm ca sĩ --</option>
+            Ca sĩ (Có thể chọn nhiều)
+            <select name="artist_ids[]" class="search-select" multiple="multiple" required style="width: 100%;">
                 <?php while ($artist = $artistResult->fetch_assoc()): ?>
-                    <option value="<?php echo $artist['ArtistID']; ?>" <?php echo $artist['ArtistID'] == $currentArtistId ? 'selected' : ''; ?>><?php echo htmlspecialchars($artist['Name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                    <option value="<?php echo $artist['ArtistID']; ?>" <?php echo in_array($artist['ArtistID'], $currentArtistIdsArray) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($artist['Name'], ENT_QUOTES, 'UTF-8'); ?>
+                    </option>
                 <?php endwhile; ?>
             </select>
         </label>
         
         <label>
             Ngày phát hành
-            <input type="date" name="release_date" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($song['ReleaseDate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+            <input type="date" name="release_date" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($song['ReleaseDate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; padding: 8px; margin-top: 5px;">
         </label>
-        <button type="submit" class="btn-admin">Cập nhật</button>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn-admin" style="background-color: var(--purple-primary);">Lưu cập nhật</button>
+            <button type="button" class="btn-admin" onclick="loadContent('admin_songs.php')" style="background-color: #4b5563;">Hủy bỏ</button>
+        </div>
     </div>
 </form>
