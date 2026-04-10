@@ -232,7 +232,7 @@
 
             <div class="sidebar-scroll">
                 <ul class="menu-list">
-                    <li class="menu-item"><i class="fa-solid fa-layer-group"></i> Thư Viện</li>
+                    <li class="menu-item" onclick="loadContent('library.php')" style="cursor: pointer;"><i class="fa-solid fa-layer-group"></i> Thư Viện</li>
                     <li class="menu-item active"><i class="fa-regular fa-circle-dot"></i> Khám Phá</li>
                     <li class="menu-item"><i class="fa-solid fa-chart-line"></i> #Lyrxchart</li>
                     <li class="menu-item"><i class="fa-solid fa-podcast"></i> Phòng Nhạc <span class="live-badge">LIVE</span></li>
@@ -499,8 +499,19 @@
                 }
             });
         });
+        const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Xóa class 'active' khỏi tất cả các nút
+                menuItems.forEach(i => i.classList.remove('active'));
+                // Thêm class 'active' vào nút vừa được click
+                this.classList.add('active');
+            });
+        });
+
 
         showWelcome();
+        </script> <script src="player.js"></script> <script> showWelcome();
     </script>
 
 </body>
