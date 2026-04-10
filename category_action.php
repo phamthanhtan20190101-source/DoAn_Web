@@ -11,7 +11,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 // 2. Kết nối Database
 $servername = "localhost";
 $username = "root";
-$password = "vertrigo"; // Thay đổi nếu mật khẩu XAMPP của bạn khác
+$password = "vertrigo"; 
 $dbname = "song_management";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -57,7 +57,7 @@ if (stripos($contentType, 'application/json') !== false) {
         } elseif ($type === 'album') {
             $table = 'albums'; $idColumn = 'AlbumID';
             
-            // Xóa ảnh bìa vật lý nếu là Album
+            // Xóa ảnh bìa vật lý của Album
             $stmtImg = $conn->prepare("SELECT CoverImage_URL FROM albums WHERE AlbumID = ?");
             if ($stmtImg) {
                 $stmtImg->bind_param('i', $id);
@@ -71,6 +71,21 @@ if (stripos($contentType, 'application/json') !== false) {
             }
         } elseif ($type === 'comment') {
             $table = 'comments'; $idColumn = 'CommentID';
+        } elseif ($type === 'banner') {
+            $table = 'banners'; $idColumn = 'BannerID';
+            
+            // Xóa ảnh vật lý của Banner
+            $stmtImg = $conn->prepare("SELECT ImageURL FROM banners WHERE BannerID = ?");
+            $stmtImg->bind_param('i', $id);
+            $stmtImg->execute();
+            $stmtImg->bind_result($bPath);
+            if ($stmtImg->fetch() && !empty($bPath)) {
+                $realPath = __DIR__ . '/' . ltrim($bPath, '/');
+                if (file_exists($realPath)) @unlink($realPath);
+            }
+            $stmtImg->close();
+        } elseif ($type === 'playlist') {
+            $table = 'playlists'; $idColumn = 'PlaylistID';
         }
         else {
             sendJsonResponse(false, 'Loại danh mục không hợp lệ.');
@@ -83,8 +98,7 @@ if (stripos($contentType, 'application/json') !== false) {
             if ($stmt->execute()) {
                 sendJsonResponse(true, 'Đã xóa thành công.');
             } else {
-                // Lỗi thường do khóa ngoại (ví dụ: Thể loại này đang có bài hát)
-                sendJsonResponse(false, 'Không thể xóa. Có thể danh mục này đang chứa dữ liệu (Bài hát). Lỗi: ' . $conn->error);
+                sendJsonResponse(false, 'Không thể xóa. Dữ liệu đang được liên kết. Lỗi: ' . $conn->error);
             }
             $stmt->close();
         }
@@ -97,7 +111,7 @@ if (stripos($contentType, 'application/json') !== false) {
 // =========================================================================
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = getPostVal('action');
-    $type = getPostVal('type'); // 'genre', 'artist', 'album'
+    $type = getPostVal('type'); 
     
     if (empty($action) || empty($type)) {
         echo '<div style="color: red;">Yêu cầu không hợp lệ.</div>';
@@ -105,9 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        // ---------------------------------------------------------
-        // A. XỬ LÝ THỂ LOẠI (GENRES)
-        // ---------------------------------------------------------
+        // --- A. XỬ LÝ THỂ LOẠI (GENRES) ---
         if ($type === 'genre') {
             $name = getPostVal('name');
             if (empty($name)) throw new Exception("Tên thể loại không được để trống.");
@@ -116,19 +128,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("INSERT INTO genres (Name) VALUES (?)");
                 $stmt->bind_param("s", $name);
                 $stmt->execute();
-                echo '<div style="color: #4ade80; margin-bottom: 15px;">Thêm thể loại thành công!</div>';
+                echo '<div style="color: #4ade80;">Thêm thể loại thành công!</div>';
             } 
             elseif ($action === 'update') {
                 $id = intval(getPostVal('id'));
                 $stmt = $conn->prepare("UPDATE genres SET Name = ? WHERE GenreID = ?");
                 $stmt->bind_param("si", $name, $id);
                 $stmt->execute();
-                echo '<div style="color: #4ade80; margin-bottom: 15px;">Cập nhật thể loại thành công!</div>';
+                echo '<div style="color: #4ade80;">Cập nhật thành công!</div>';
             }
         }
-        // ---------------------------------------------------------
-        // B. XỬ LÝ NGHỆ SĨ (ARTISTS)
-        // ---------------------------------------------------------
+        // --- B. XỬ LÝ NGHỆ SĨ (ARTISTS) ---
         elseif ($type === 'artist') {
             $name = getPostVal('name');
             $country = getPostVal('country');
@@ -140,19 +150,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("INSERT INTO artists (Name, Country, Bio) VALUES (?, ?, ?)");
                 $stmt->bind_param("sss", $name, $country, $bio);
                 $stmt->execute();
-                echo '<div style="color: #4ade80; margin-bottom: 15px;">Thêm nghệ sĩ thành công!</div>';
+                echo '<div style="color: #4ade80;">Thêm nghệ sĩ thành công!</div>';
             } 
             elseif ($action === 'update') {
                 $id = intval(getPostVal('id'));
                 $stmt = $conn->prepare("UPDATE artists SET Name = ?, Country = ?, Bio = ? WHERE ArtistID = ?");
                 $stmt->bind_param("sssi", $name, $country, $bio, $id);
                 $stmt->execute();
-                echo '<div style="color: #4ade80; margin-bottom: 15px;">Cập nhật nghệ sĩ thành công!</div>';
+                echo '<div style="color: #4ade80;">Cập nhật thành công!</div>';
             }
         }
-        // ---------------------------------------------------------
-        // C. XỬ LÝ ALBUM (ALBUMS)
-        // ---------------------------------------------------------
+        // --- C. XỬ LÝ ALBUM (ALBUMS) ---
         elseif ($type === 'album') {
             $title = getPostVal('title');
             $releaseYear = getPostVal('release_year');
@@ -160,16 +168,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if (empty($title)) throw new Exception("Tên album không được để trống.");
 
-            // Xử lý upload ảnh bìa (nếu có)
             $coverUrl = null;
             if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = __DIR__ . '/uploads/albums';
                 if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
-                
                 $fileName = uniqid('album_') . '_' . basename($_FILES['cover_image']['name']);
-                $destPath = $uploadDir . '/' . $fileName;
-                
-                if (move_uploaded_file($_FILES['cover_image']['tmp_name'], $destPath)) {
+                if (move_uploaded_file($_FILES['cover_image']['tmp_name'], $uploadDir . '/' . $fileName)) {
                     $coverUrl = 'uploads/albums/' . $fileName;
                 }
             }
@@ -178,22 +182,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $conn->prepare("INSERT INTO albums (Title, ReleaseYear, CoverImage_URL) VALUES (?, ?, ?)");
                 $stmt->bind_param("sis", $title, $releaseYear, $coverUrl);
                 $stmt->execute();
-                echo '<div style="color: #4ade80; margin-bottom: 15px;">Thêm album thành công!</div>';
+                echo '<div style="color: #4ade80;">Thêm album thành công!</div>';
             } 
             elseif ($action === 'update') {
                 $id = intval(getPostVal('id'));
-                
                 if ($coverUrl !== null) {
-                    // Xóa ảnh cũ nếu có up ảnh mới
-                    $stmtOld = $conn->prepare("SELECT CoverImage_URL FROM albums WHERE AlbumID = ?");
-                    $stmtOld->bind_param('i', $id);
-                    $stmtOld->execute();
-                    $stmtOld->bind_result($oldCover);
-                    if ($stmtOld->fetch() && !empty($oldCover)) {
-                        @unlink(__DIR__ . '/' . ltrim($oldCover, '/'));
-                    }
-                    $stmtOld->close();
-
                     $stmt = $conn->prepare("UPDATE albums SET Title = ?, ReleaseYear = ?, CoverImage_URL = ? WHERE AlbumID = ?");
                     $stmt->bind_param("sisi", $title, $releaseYear, $coverUrl, $id);
                 } else {
@@ -201,18 +194,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->bind_param("sii", $title, $releaseYear, $id);
                 }
                 $stmt->execute();
-                echo '<div style="color: #4ade80; margin-bottom: 15px;">Cập nhật album thành công!</div>';
+                echo '<div style="color: #4ade80;">Cập nhật thành công!</div>';
+            }
+        }
+        // --- D. XỬ LÝ BANNER (BANNERS) ---
+        elseif ($type === 'banner') {
+            $title = getPostVal('title');
+            $link = getPostVal('link_url');
+            
+            if (empty($title)) throw new Exception("Tiêu đề banner không được để trống.");
+
+            if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/uploads/banners';
+                if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
+                
+                $fileName = uniqid('banner_') . '_' . basename($_FILES['banner_image']['name']);
+                if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $uploadDir . '/' . $fileName)) {
+                    $imgUrl = 'uploads/banners/' . $fileName;
+                    $stmt = $conn->prepare("INSERT INTO banners (Title, ImageURL, LinkURL) VALUES (?, ?, ?)");
+                    $stmt->bind_param("sss", $title, $imgUrl, $link);
+                    $stmt->execute();
+                    echo '<div style="color: #4ade80;">Đã tải lên banner thành công!</div>';
+                }
+            } else {
+                throw new Exception("Vui lòng chọn ảnh cho banner.");
             }
         }
         
     } catch (Exception $e) {
-        echo '<div style="color: #f87171; margin-bottom: 15px;">Lỗi: ' . htmlspecialchars($e->getMessage()) . '</div>';
+        echo '<div style="color: #f87171;">Lỗi: ' . htmlspecialchars($e->getMessage()) . '</div>';
     }
     
-    // Nút quay lại danh sách tương ứng
+    // Nút quay lại tự động dựa theo loại danh mục
     $backUrl = "admin_" . $type . "s.php";
     if ($type === 'genre') $backUrl = "admin_genres.php";
-    echo '<button type="button" class="btn-admin" onclick="loadContent(\''.$backUrl.'\')">Quay lại danh sách</button>';
+    if ($type === 'banner') $backUrl = "admin_banners.php";
+    echo '<button type="button" class="btn-admin" style="margin-top:15px;" onclick="loadContent(\''.$backUrl.'\')">Quay lại danh sách</button>';
 }
 
 $conn->close();
