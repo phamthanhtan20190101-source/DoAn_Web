@@ -35,20 +35,19 @@
             height: 100%; 
         }
 
-        /* CĂN CHỈNH LOGO TỪ FILE ẢNH */
         .logo-container { 
-            padding: 0 25px; /* Bỏ padding dọc để logo tự căn giữa theo height */
+            padding: 0 25px;
             cursor: pointer; 
-            height: 70px; /* Đặt chiều cao bằng với Header bên phải */
+            height: 70px;
             display: flex;
-            align-items: center; /* Căn giữa ảnh theo chiều dọc */
+            align-items: center;
             justify-content: flex-start;
         }
         
         .lyrx-logo-img {
-            max-width: 100%; /* Không để ảnh tràn viền */
-            height: 45px; /* Giới hạn chiều cao để ảnh gọn gàng, không bị lố */
-            object-fit: contain; /* Giữ nguyên tỷ lệ khung hình của ảnh gốc */
+            max-width: 100%;
+            height: 45px;
+            object-fit: contain;
         }
 
         .sidebar-scroll { flex: 1; overflow-y: auto; }
@@ -80,17 +79,12 @@
         }
         .btn-login:hover { background: white; color: var(--purple-primary); }
 
-        .create-playlist {
-            height: 54px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center;
-            gap: 10px; padding: 0 25px; color: white; font-size: 14px; font-weight: 600; cursor: pointer;
-        }
-
         /* ================= 2. MAIN VÙNG CHÍNH ================= */
         .main-container { flex: 1; display: flex; flex-direction: column; background-color: var(--bg-body); }
         .admin-sidebar { width: 220px; background-color: var(--bg-sidebar); border-left: 1px solid rgba(255,255,255,0.08); padding: 20px; display: flex; flex-direction: column; gap: 12px; position: sticky; top: 0; height: calc(100vh - 90px); }
         .admin-sidebar h3 { color: white; margin-bottom: 10px; font-size: 14px; }
         .admin-sidebar button { width: 100%; text-align: left; }
-        .admin-sidebar .btn-admin { width: 100%; }
+        .admin-sidebar .btn-admin { width: 100%; margin-bottom: 5px; }
 
         /* HEADER */
         .header { 
@@ -108,82 +102,79 @@
             background: rgba(255, 255, 255, 0.1); padding: 0 15px 0 45px; 
             color: white; outline: none; font-size: 14px;
         }
-        .search-bar input::placeholder { color: var(--text-secondary); }
 
-        /* Header Right */
         .header-right { display: flex; align-items: center; gap: 15px; }
-        
         .btn-vip {
             background-color: var(--purple-primary); color: white; border: none;
             padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer;
         }
         
-        .btn-setting { 
+        .btn-setting, .btn-avatar { 
             width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); 
             border: none; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; 
         }
-        
-        .btn-avatar { 
-            width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
-            background-image: linear-gradient(to right, #ffbaba, #ffbaba, #aee2ff, #aee2ff);
-            display: flex; justify-content: center; align-items: center;
-        }
+        .btn-avatar { background-image: linear-gradient(to right, #ffbaba, #aee2ff); }
         .btn-avatar i { font-size: 20px; color: rgba(0,0,0,0.5); }
         
         .page-content { flex: 1; overflow-y: auto; padding: 20px 40px 100px 40px; }
 
         /* ================= 3. PLAYER ================= */
         .player { position: fixed; bottom: 0; left: 0; width: 100%; height: 90px; background-color: var(--bg-player); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 100; }
-        
         .player-left { width: 30%; display: flex; align-items: center; gap: 15px; }
         .song-thumb { width: 45px; height: 45px; border-radius: 5px; background-color: #333; } 
         .song-info { display: flex; flex-direction: column; gap: 3px; }
         .song-title { font-size: 14px; font-weight: 500; }
         .song-artist { font-size: 12px; color: var(--text-secondary); }
-        .song-actions i { color: var(--text-primary); margin-left: 10px; cursor: pointer; }
 
         .player-center { width: 40%; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .control-buttons { display: flex; align-items: center; gap: 25px; }
         .control-buttons i { font-size: 18px; cursor: pointer; color: var(--text-primary); transition: 0.2s; }
-        .control-buttons i:hover { color: var(--purple-primary); }
-        .btn-play { font-size: 35px !important; color: white !important; }
+        .btn-play { font-size: 35px !important; }
 
         .progress-container { width: 100%; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-secondary); }
         .progress-bar { flex: 1; height: 3px; background: rgba(255,255,255,0.2); border-radius: 5px; position: relative; cursor: pointer; }
         .progress-bar .current-progress { position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: var(--text-primary); border-radius: 5px; }
 
-        .player-right { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
-        .player-right i { color: var(--text-primary); cursor: pointer; }
-        .volume-bar { width: 100px; height: 3px; background: rgba(255,255,255,0.2); border-radius: 5px; position: relative; cursor: pointer; }
-        .volume-bar .current-volume { position: absolute; left: 0; top: 0; height: 100%; width: 50%; background: var(--text-primary); border-radius: 5px; }
+        /* ================= CUSTOM SELECT2 DARK MODE ================= */
+        .select2-container--default .select2-selection--single {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            height: 40px !important; border-radius: 5px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #fff !important; line-height: 40px;
+        }
+        .select2-dropdown {
+            background-color: #231b2e !important; border: 1px solid var(--purple-primary) !important; color: #fff !important;
+        }
+        .select2-container--default .select2-results__option { color: #fff !important; }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--purple-primary) !important;
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            background-color: #170f23 !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; color: #fff !important;
+        }
 
-        /* ================= LOGIN & REGISTER MODAL ================= */
+        /* ================= MODALS & UTILS ================= */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;
         }
         .modal-content {
             background: var(--bg-sidebar); border-radius: 10px; padding: 30px; width: 400px; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .modal-content h2 { color: white; margin-bottom: 20px; }
         .modal-content input {
             width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 5px;
             background: rgba(255,255,255,0.1); color: white;
         }
-        .modal-content input::placeholder { color: var(--text-secondary); }
         .modal-content button {
-            width: 100%; padding: 10px; background: var(--purple-primary); color: white; border: none; border-radius: 5px;
-            cursor: pointer; margin-top: 10px;
+            width: 100%; padding: 10px; background: var(--purple-primary); color: white; border: none; border-radius: 5px; cursor: pointer;
         }
-        .modal-content a { color: var(--purple-primary); text-decoration: none; display: block; margin-top: 10px; }
-        .modal-content .modal-switch { font-size: 13px; margin-top: 10px; color: var(--text-secondary); cursor: pointer; }
-
         .welcome-box {
             position: fixed; top: 20px; right: 20px; background: rgba(32, 28, 45, 0.95);
             border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 18px;
             color: white; box-shadow: 0 14px 40px rgba(0,0,0,0.25); opacity: 0; transform: translateY(-10px);
-            transition: opacity 0.4s ease, transform 0.4s ease; z-index: 1100;
+            transition: 0.4s ease; z-index: 1100; pointer-events: none;
         }
         .welcome-box.show { opacity: 1; transform: translateY(0); }
 
@@ -193,66 +184,9 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 18px; display: none; z-index: 1100;
         }
         .avatar-dropdown.show { display: block; }
-        .avatar-dropdown .item { margin-bottom: 12px; font-size: 14px; color: white; }
-        .avatar-dropdown .item strong { display: inline-block; width: 80px; color: #c5c1d9; }
         .avatar-dropdown .logout-btn {
-            width: 100%; padding: 10px 0; background: #6f55ff; color: white; border: none;
-            border-radius: 10px; cursor: pointer; font-weight: 700;
+            width: 100%; padding: 10px 0; background: #6f55ff; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; margin-top: 10px;
         }
-
-        .user-greeting { color: #ffffffcc; font-size: 14px; margin-right: 10px; }
-
-        /* ================= ADMIN TOOLBAR ================= */
-        .admin-toolbar { display: flex; gap: 10px; margin-right: 15px; }
-        .btn-admin {
-            background: var(--purple-primary); color: white; border: none; padding: 8px 15px;
-            border-radius: 5px; font-size: 12px; cursor: pointer;
-        }
-        /* ================= CUSTOM SELECT2 DARK MODE ================= */
-/* Màu chữ trong ô tìm kiếm và danh sách gợi ý */
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #fff !important;
-    line-height: 40px;
-}
-
-/* Nền của ô chọn chính */
-.select2-container--default .select2-selection--single {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    height: 40px !important;
-    border-radius: 5px !important;
-}
-
-/* Khung danh sách gợi ý đổ xuống */
-.select2-dropdown {
-    background-color: #231b2e !important; /* Màu nền sidebar của bạn */
-    border: 1px solid var(--purple-primary) !important;
-    color: #fff !important;
-}
-
-/* Ô input tìm kiếm bên trong danh sách đổ xuống */
-.select2-container--default .select2-search--dropdown .select2-search__field {
-    background-color: #170f23 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: #fff !important;
-}
-
-/* Màu chữ của từng item trong danh sách */
-.select2-container--default .select2-results__option {
-    color: #fff !important;
-}
-
-/* Màu nền khi di chuột qua (hover) hoặc khi item được chọn */
-.select2-container--default .select2-results__option--highlighted[aria-selected],
-.select2-container--default .select2-results__option[aria-selected=true] {
-    background-color: var(--purple-primary) !important;
-    color: #white !important;
-}
-
-/* Màu chữ placeholder */
-.select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #ffffff80 !important;
-}
     </style>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -261,6 +195,7 @@
 <body>
 
     <div id="welcomeBox" class="welcome-box"></div>
+    
     <div id="avatarDropdown" class="avatar-dropdown">
         <div class="item"><strong>Tên:</strong> <span id="avatarName"></span></div>
         <div class="item"><strong>Email:</strong> <span id="avatarEmail"></span></div>
@@ -269,34 +204,31 @@
             <button type="submit" class="logout-btn">Đăng xuất</button>
         </form>
     </div>
+
     <div class="app">
         <aside class="sidebar">
-            <div class="logo-container">
+            <div class="logo-container" onclick="location.reload()">
                 <img src="images/logo1.png" alt="Lyrx Logo" class="lyrx-logo-img">
             </div>
-
             <div class="sidebar-scroll">
                 <ul class="menu-list">
-                    <li class="menu-item" onclick="loadContent('library.php')" style="cursor: pointer;"><i class="fa-solid fa-layer-group"></i> Thư Viện</li>
+                    <li class="menu-item" onclick="loadContent('library.php')"><i class="fa-solid fa-layer-group"></i> Thư Viện</li>
                     <li class="menu-item active"><i class="fa-regular fa-circle-dot"></i> Khám Phá</li>
                     <li class="menu-item"><i class="fa-solid fa-chart-line"></i> #Lyrxchart</li>
                     <li class="menu-item"><i class="fa-solid fa-podcast"></i> Phòng Nhạc <span class="live-badge">LIVE</span></li>
                 </ul>
-                
                 <div class="divider"></div>
-                
                 <ul class="menu-list">
                     <li class="menu-item"><i class="fa-solid fa-music"></i> BXH Nhạc Mới</li>
                     <li class="menu-item"><i class="fa-solid fa-icons"></i> Chủ Đề & Thể Loại</li>
                     <li class="menu-item"><i class="fa-regular fa-star"></i> Top 100</li>
                 </ul>
-
-                <?php if (!isset($_SESSION['username'])) { ?>
+                <?php if (!isset($_SESSION['username'])): ?>
                 <div class="login-card">
                     <p>Đăng nhập để khám phá playlist dành riêng cho bạn</p>
                     <button type="button" class="btn-login">ĐĂNG NHẬP</button>
                 </div>
-                <?php } ?>
+                <?php endif; ?>
             </div>
         </aside>
 
@@ -311,35 +243,31 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <?php if (isset($_SESSION['username'])) { ?>
-                        <div class="user-greeting">Chào mừng, <?php echo htmlspecialchars($_SESSION['username'], ENT_QUOTES, 'UTF-8'); ?>!</div>
-                    <?php } ?>
-                    <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') { ?>
+                    <?php if (isset($_SESSION['username'])): ?>
+                        <div class="user-greeting">Chào mừng, <?php echo htmlspecialchars($_SESSION['username']); ?>!</div>
+                    <?php endif; ?>
                     <button class="btn-vip">Nâng cấp tài khoản</button>
-                <?php } ?>
-                <button class="btn-setting"><i class="fa-solid fa-gear"></i></button>
-                <button class="btn-avatar"><i class="fa-solid fa-user"></i></button>
+                    <button class="btn-setting"><i class="fa-solid fa-gear"></i></button>
+                    <button class="btn-avatar"><i class="fa-solid fa-user"></i></button>
                 </div>
             </header>
 
             <div class="page-content" id="main-content-area">
-            </div>
+                </div>
         </main>
+
         <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'admin'): ?>
-        <!-- Admin menu bên phải -->
         <aside class="admin-sidebar">
             <h3>Admin Menu</h3>
-                <button type="button" class="btn-admin" style="background-color: #10b981;" onclick="loadContent('admin_dashboard.php')">Bảng điều khiển</button>
-    
-                <button type="button" class="btn-admin" style="background-color: #ea580c;" onclick="loadContent('approve_songs.php')">Duyệt bài hát chờ</button>
-    
-                <button type="button" class="btn-admin" onclick="loadContent('admin_songs.php')">Bài hát</button>
-                <button type="button" class="btn-admin" onclick="loadContent('admin_genres.php')">Thể loại</button>
-                <button type="button" class="btn-admin" onclick="loadContent('admin_artists.php')">Nghệ sĩ</button>
-                <button type="button" class="btn-admin" onclick="loadContent('admin_albums.php')">Albums</button>
-    
-                <button type="button" class="btn-admin" onclick="loadContent('admin_users.php')">Người dùng</button>
-                <button type="button" class="btn-admin" onclick="loadContent('admin_comments.php')">Bình luận & Báo cáo</button>
+            <button class="btn-admin" style="background-color: #10b981;" onclick="loadContent('admin_dashboard.php')">Bảng điều khiển</button>
+            <button class="btn-admin" style="background-color: #ea580c;" onclick="loadContent('approve_songs.php')">Duyệt bài hát chờ</button>
+            <button class="btn-admin" onclick="loadContent('admin_songs.php')">Bài hát</button>
+            <button class="btn-admin" onclick="loadContent('admin_genres.php')">Thể loại</button>
+            <button class="btn-admin" onclick="loadContent('admin_artists.php')">Nghệ sĩ</button>
+            <button class="btn-admin" onclick="loadContent('admin_albums.php')">Albums</button>
+            <button class="btn-admin" onclick="loadContent('admin_users.php')">Người dùng</button>
+            <button class="btn-admin" onclick="loadContent('admin_comments.php')">Bình luận & Báo cáo</button>
+        </aside>
         <?php endif; ?>
     </div>
 
@@ -350,12 +278,7 @@
                 <div class="song-title">...</div>
                 <div class="song-artist">...</div>
             </div>
-            <div class="song-actions">
-                <i class="fa-regular fa-heart"></i>
-                <i class="fa-solid fa-ellipsis"></i>
-            </div>
         </div>
-
         <div class="player-center">
             <div class="control-buttons">
                 <i class="fa-solid fa-shuffle"></i>
@@ -366,24 +289,16 @@
             </div>
             <div class="progress-container">
                 <span class="time-current">00:00</span>
-                <div class="progress-bar">
-                    <div class="current-progress"></div>
-                </div>
+                <div class="progress-bar"><div class="current-progress"></div></div>
                 <span class="time-total">00:00</span>
             </div>
         </div>
-
         <div class="player-right">
-            <i class="fa-solid fa-microphone"></i>
             <i class="fa-solid fa-volume-high"></i>
-            <div class="volume-bar">
-                <div class="current-volume"></div>
-            </div>
-            <i class="fa-solid fa-list-music" style="margin-left: 10px;"></i>
+            <div class="volume-bar"><div class="current-volume"></div></div>
         </div>
     </footer>
 
-    <!-- Login Modal -->
     <div id="loginModal" class="modal-overlay">
         <div class="modal-content">
             <h2>Đăng nhập Lyrx</h2>
@@ -392,11 +307,10 @@
                 <input type="password" name="password" placeholder="Mật khẩu" required>
                 <button type="submit">Đăng nhập</button>
             </form>
-            <div class="modal-switch" id="openRegister">Bạn chưa có tài khoản? Đăng ký ngay</div>
+            <div class="modal-switch" onclick="openRegisterModal()">Bạn chưa có tài khoản? Đăng ký ngay</div>
         </div>
     </div>
 
-    <!-- Register Modal -->
     <div id="registerModal" class="modal-overlay">
         <div class="modal-content">
             <h2>Đăng ký tài khoản</h2>
@@ -407,15 +321,12 @@
                 <input type="email" name="email" placeholder="Email" required>
                 <button type="submit">Đăng ký</button>
             </form>
-            <div class="modal-switch" id="openLogin">Đã có tài khoản? Đăng nhập</div>
+            <div class="modal-switch" onclick="openLoginModal()">Đã có tài khoản? Đăng nhập</div>
         </div>
     </div>
 
     <script>
-        const loginModal = document.getElementById('loginModal');
-        const registerModal = document.getElementById('registerModal');
         const avatarDropdown = document.getElementById('avatarDropdown');
-        const loginAvatar = document.querySelector('.btn-avatar');
         const mainContent = document.getElementById('main-content-area');
         const welcomeBox = document.getElementById('welcomeBox');
 
@@ -426,170 +337,110 @@
             role: '<?php echo isset($_SESSION['role']) ? addslashes($_SESSION['role']) : ''; ?>'
         };
 
-        function openLoginModal() {
-            registerModal.style.display = 'none';
-            loginModal.style.display = 'flex';
-            avatarDropdown.classList.remove('show');
+        // --- CÁC HÀM GIAO DIỆN ---
+        function openLoginModal() { 
+            document.getElementById('registerModal').style.display = 'none';
+            document.getElementById('loginModal').style.display = 'flex'; 
         }
-
-        function openRegisterModal() {
-            loginModal.style.display = 'none';
-            registerModal.style.display = 'flex';
-            avatarDropdown.classList.remove('show');
+        function openRegisterModal() { 
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('registerModal').style.display = 'flex'; 
         }
 
         function showWelcome() {
             if (!isLoggedIn) return;
             welcomeBox.textContent = `Chào mừng trở lại, ${userInfo.username}`;
             welcomeBox.classList.add('show');
-            setTimeout(() => {
-                welcomeBox.classList.remove('show');
-            }, 3000);
+            setTimeout(() => welcomeBox.classList.remove('show'), 3000);
         }
 
         function toggleAvatarDropdown() {
-            if (!isLoggedIn) {
-                openLoginModal();
-                return;
-            }
-            if (avatarDropdown.classList.contains('show')) {
-                avatarDropdown.classList.remove('show');
-            } else {
-                document.getElementById('avatarName').textContent = userInfo.username;
-                document.getElementById('avatarEmail').textContent = userInfo.email || '---';
-                document.getElementById('avatarRole').textContent = userInfo.role || 'user';
-                avatarDropdown.classList.add('show');
-                loginModal.style.display = 'none';
-                registerModal.style.display = 'none';
-            }
+            if (!isLoggedIn) { openLoginModal(); return; }
+            document.getElementById('avatarName').textContent = userInfo.username;
+            document.getElementById('avatarEmail').textContent = userInfo.email || '---';
+            document.getElementById('avatarRole').textContent = userInfo.role || 'user';
+            avatarDropdown.classList.toggle('show');
         }
 
+        // --- AJAX LOAD NỘI DUNG ---
         function loadContent(url) {
-            if (!mainContent) return;
             fetch(url, { credentials: 'same-origin' })
-                .then(response => response.text())
+                .then(res => res.text())
                 .then(html => {
                     mainContent.innerHTML = html;
                     attachAjaxFormHandler();
-                    
-                    // Kích hoạt Select2 với tính năng cho phép gõ tên mới (Tags)
+                    // Khởi tạo Select2 cho các thẻ mới tải về
                     if (typeof $ !== 'undefined') {
-                        $('.search-select').select2({ 
-                            width: '100%',
-                            tags: true, // Cho phép gõ chữ mới không có trong danh sách
-                            createTag: function (params) {
-                                var term = $.trim(params.term);
-                                if (term === '') { return null; }
-                                return {
-                                    id: term,
-                                    text: term,
-                                    newTag: true
-                                }
-                            }
-                        });
+                        $('.search-select').select2({ width: '100%', tags: true });
                     }
-                })
-                .catch(() => {
-                    mainContent.innerHTML = '<div style="color: white;">Không tải được nội dung.</div>';
                 });
         }
 
         function attachAjaxFormHandler() {
-            if (!mainContent) return;
             const ajaxForms = mainContent.querySelectorAll('form[data-ajax]');
             ajaxForms.forEach(form => {
-                if (form.dataset.ajaxAttached === 'true') return;
+                if (form.dataset.ajaxAttached) return;
                 form.dataset.ajaxAttached = 'true';
-                form.addEventListener('submit', async function(event) {
-                    event.preventDefault();
-                    
-                    // Dùng getAttribute để bắt buộc JS lấy cái link, không được lấy thẻ input
-                    const action = form.getAttribute('action'); 
-                    const method = form.getAttribute('method') || 'POST';
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
                     const formData = new FormData(form);
-                    const response = await fetch(action, {
-                        method: method,
-                        credentials: 'same-origin',
+                    const res = await fetch(form.getAttribute('action'), {
+                        method: form.getAttribute('method') || 'POST',
                         body: formData
                     });
-                    const html = await response.text();
-                    if (form.dataset.reloadUrl) {
-                        loadContent(form.dataset.reloadUrl);
-                    } else {
-                        mainContent.innerHTML = html;
-                        attachAjaxFormHandler();
-                    }
+                    const result = await res.text();
+                    if (form.dataset.reloadUrl) loadContent(form.dataset.reloadUrl);
+                    else { mainContent.innerHTML = result; attachAjaxFormHandler(); }
                 });
             });
         }
 
-        if (loginAvatar) {
-            loginAvatar.addEventListener('click', toggleAvatarDropdown);
-        }
-        const loginButton = document.querySelector('.btn-login');
-        if (loginButton) {
-            loginButton.addEventListener('click', openLoginModal);
-        }
-        document.getElementById('openRegister').addEventListener('click', openRegisterModal);
-        document.getElementById('openLogin').addEventListener('click', openLoginModal);
-
-        document.addEventListener('click', function(event) {
-            if (avatarDropdown.classList.contains('show') && !avatarDropdown.contains(event.target) && !loginAvatar.contains(event.target)) {
-                avatarDropdown.classList.remove('show');
-            }
-        });
-
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.style.display = 'none';
-                }
-            });
-        });
-
-        showWelcome();
-            // --- HÀM XÓA DÀNH CHO TOÀN BỘ HỆ THỐNG ---
+        // --- HÀM XÓA HỆ THỐNG ---
         window.deleteSong = function(songId) {
-            if (!confirm('Bạn có chắc muốn xóa bài hát này? Thao tác này không thể hoàn tác!')) return;
+            if (!confirm('Bạn có chắc muốn xóa bài hát này?')) return;
             fetch('song_action.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                credentials: 'same-origin',
                 body: JSON.stringify({action: 'delete', songId: songId})
             }).then(res => res.json()).then(data => {
-                alert(data.message || 'Đã xóa.');
+                alert(data.message);
                 if (data.success) loadContent('admin_songs.php');
-            }).catch(err => alert('Lỗi hệ thống khi xóa!'));
+            });
         };
 
         window.deleteCategory = function(type, id) {
-            if (!confirm('Bạn có chắc chắn muốn xóa dữ liệu này? Thao tác này không thể hoàn tác!')) return;
+            if (!confirm('Bạn có chắc muốn xóa dữ liệu này?')) return;
             fetch('category_action.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                credentials: 'same-origin',
                 body: JSON.stringify({action: 'delete', type: type, id: id})
             }).then(res => res.json()).then(data => {
                 alert(data.message);
                 if (data.success) {
-                    let reloadUrl = 'admin_genres.php';
-                    if (type === 'artist') reloadUrl = 'admin_artists.php';
-                    if (type === 'album') reloadUrl = 'admin_albums.php';
-                    if (type === 'comment') reloadUrl = 'admin_comments.php';
-                    loadContent(reloadUrl);
+                    const reloadMap = { 'genre': 'admin_genres.php', 'artist': 'admin_artists.php', 'album': 'admin_albums.php', 'comment': 'admin_comments.php' };
+                    loadContent(reloadMap[type]);
                 }
-            }).catch(err => alert('Lỗi hệ thống khi xóa!'));
+            });
+        };
+
+        // --- KHỞI TẠO ---
+        document.addEventListener('DOMContentLoaded', () => {
+            showWelcome();
+            document.querySelector('.btn-avatar').addEventListener('click', toggleAvatarDropdown);
+            const loginBtn = document.querySelector('.btn-login');
+            if (loginBtn) loginBtn.addEventListener('click', openLoginModal);
+
+            if (userInfo.role === 'admin') loadContent('admin_dashboard.php');
+        });
+
+        // Click ra ngoài để đóng modal/dropdown
+        window.onclick = function(e) {
+            if (e.target.classList.contains('modal-overlay')) e.target.style.display = 'none';
+            if (!e.target.closest('.btn-avatar') && !e.target.closest('#avatarDropdown')) {
+                avatarDropdown.classList.remove('show');
+            }
         };
     </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Nếu là Admin thì tự động load Dashboard lên đầu tiên
-        const isAdmin = <?php echo (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? 'true' : 'false'; ?>;
-        if (isAdmin) {
-            loadContent('admin_dashboard.php');
-        }
-    });
-</script>
-
+    <script src="player.js"></script>
 </body>
 </html>
