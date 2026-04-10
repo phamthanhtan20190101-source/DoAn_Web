@@ -19,7 +19,8 @@ $genreResult = $conn->query("SELECT GenreID, Name FROM genres ORDER BY Name ASC"
 $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name ASC");
 ?>
 <h2>Thêm bài hát mới</h2>
-<form action="song_action.php" method="POST" data-ajax="true">
+<!--<form action="song_action.php" method="POST" data-ajax="true">-->
+<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerText = 'Đang tải lên...';">
 <!--<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-reload-url="admin_songs.php">-->
     <input type="hidden" name="action" value="create">
     <div style="color: white; display: flex; flex-direction: column; gap: 12px; max-width: 500px;">
@@ -33,9 +34,7 @@ $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name A
             <select name="genre_id" class="search-select" required style="width: 100%;">
                 <option value="">-- Gõ để tìm thể loại --</option>
                 <?php while ($genre = $genreResult->fetch_assoc()): ?>
-                    <option value="<?php echo $genre['GenreID']; ?>">
-                        <?php echo htmlspecialchars($genre['Name'], ENT_QUOTES, 'UTF-8'); ?>
-                    </option>
+                    <option value="<?php echo $genre['GenreID']; ?>"><?php echo htmlspecialchars($genre['Name'], ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php endwhile; ?>
             </select>
         </label>
@@ -44,9 +43,7 @@ $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name A
             <select name="artist_id" class="search-select" required>
                 <option value="">-- Gõ để tìm ca sĩ --</option>
                 <?php while ($artist = $artistResult->fetch_assoc()): ?>
-                    <option value="<?php echo $artist['ArtistID']; ?>">
-                        <?php echo htmlspecialchars($artist['Name'], ENT_QUOTES, 'UTF-8'); ?>
-                    </option>
+                    <option value="<?php echo $artist['ArtistID']; ?>"><?php echo htmlspecialchars($artist['Name'], ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php endwhile; ?>
             </select>
         </label>

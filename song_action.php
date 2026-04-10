@@ -51,14 +51,14 @@ function validateMp3Upload(array $file) {
         throw new RuntimeException('Chỉ chấp nhận file có đuôi .mp3');
     }
 
-    // 3. Ràng buộc MIME Type (Soi lõi thực sự của file)
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mimeType = $finfo->file($file['tmp_name']);
-    
-    // audio/mpeg là chuẩn MIME thực sự của file mp3
-    if ($mimeType !== 'audio/mpeg' && $mimeType !== 'audio/mp3') {
-        throw new RuntimeException('Phát hiện file giả mạo định dạng! (Định dạng thật: ' . $mimeType . ')');
-    }
+    // 3. Ràng buộc MIME Type (Soi lõi thực sự của file) 
+    // -> ĐÃ TẠM TẮT BẰNG DẤU // ĐỂ TRÁNH LỖI 'finfo' TRÊN VERTRIGO CỦA BẠN
+    // $finfo = new finfo(FILEINFO_MIME_TYPE);
+    // $mimeType = $finfo->file($file['tmp_name']);
+    // 
+    // if ($mimeType !== 'audio/mpeg' && $mimeType !== 'audio/mp3') {
+    //     throw new RuntimeException('Phát hiện file giả mạo định dạng! (Định dạng thật: ' . $mimeType . ')');
+    // }
 
     return true;
 }
@@ -148,28 +148,46 @@ try {
     $releaseDate = getPostValue('release_date');
     $releaseDate = $releaseDate !== '' ? $releaseDate : null;
 
-    // --- XỬ LÝ THỂ LOẠI (CŨ HOẶC MỚI GÕ THÊM) ---
+    // --- XỬ LÝ THỂ LOẠI (TỰ ĐỘNG NHẬN DIỆN TRÙNG LẶP TÊN) ---
     $genreInput = getPostValue('genre_id');
     $genreId = intval($genreInput); 
-    // Nếu intval = 0 và chuỗi không rỗng -> Thêm thể loại mới
     if ($genreId === 0 && !empty($genreInput)) {
-        $stmtNewGenre = $conn->prepare('INSERT INTO genres (Name) VALUES (?)');
-        $stmtNewGenre->bind_param('s', $genreInput);
-        $stmtNewGenre->execute();
-        $genreId = $stmtNewGenre->insert_id; // Lấy ID vừa tạo
-        $stmtNewGenre->close();
+        $stmtCheckG = $conn->prepare("SELECT GenreID FROM genres WHERE Name = ?");
+        $stmtCheckG->bind_param('s', $genreInput);
+        $stmtCheckG->execute();
+        $stmtCheckG->bind_result($existingGenreId);
+        if ($stmtCheckG->fetch()) {
+            $genreId = $existingGenreId; // Đã có trong CSDL, lấy lại ID cũ
+            $stmtCheckG->close();
+        } else {
+            $stmtCheckG->close();
+            $stmtNewGenre = $conn->prepare('INSERT INTO genres (Name) VALUES (?)');
+            $stmtNewGenre->bind_param('s', $genreInput);
+            $stmtNewGenre->execute();
+            $genreId = $stmtNewGenre->insert_id; // Thêm mới và lấy ID mới
+            $stmtNewGenre->close();
+        }
     }
 
-    // --- XỬ LÝ CA SĨ (CŨ HOẶC MỚI GÕ THÊM) ---
+    // --- XỬ LÝ CA SĨ (TỰ ĐỘNG NHẬN DIỆN TRÙNG LẶP TÊN) ---
     $artistInput = getPostValue('artist_id');
     $artistId = intval($artistInput); 
-    // Nếu intval = 0 và chuỗi không rỗng -> Thêm nghệ sĩ mới
     if ($artistId === 0 && !empty($artistInput)) {
-        $stmtNewArtist = $conn->prepare('INSERT INTO artists (Name) VALUES (?)');
-        $stmtNewArtist->bind_param('s', $artistInput);
-        $stmtNewArtist->execute();
-        $artistId = $stmtNewArtist->insert_id; // Lấy ID vừa tạo
-        $stmtNewArtist->close();
+        $stmtCheckA = $conn->prepare("SELECT ArtistID FROM artists WHERE Name = ?");
+        $stmtCheckA->bind_param('s', $artistInput);
+        $stmtCheckA->execute();
+        $stmtCheckA->bind_result($existingArtistId);
+        if ($stmtCheckA->fetch()) {
+            $artistId = $existingArtistId; // Đã có trong CSDL, lấy lại ID cũ
+            $stmtCheckA->close();
+        } else {
+            $stmtCheckA->close();
+            $stmtNewArtist = $conn->prepare('INSERT INTO artists (Name) VALUES (?)');
+            $stmtNewArtist->bind_param('s', $artistInput);
+            $stmtNewArtist->execute();
+            $artistId = $stmtNewArtist->insert_id; // Thêm mới và lấy ID mới
+            $stmtNewArtist->close();
+        }
     }
 
     if ($action === 'create') {
