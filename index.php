@@ -243,9 +243,6 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <?php if (isset($_SESSION['username'])): ?>
-                        <div class="user-greeting">Chào mừng, <?php echo htmlspecialchars($_SESSION['username']); ?>!</div>
-                    <?php endif; ?>
                     <button class="btn-vip">Nâng cấp tài khoản</button>
                     <button class="btn-setting"><i class="fa-solid fa-gear"></i></button>
                     <button class="btn-avatar"><i class="fa-solid fa-user"></i></button>
@@ -369,7 +366,6 @@
                 .then(html => {
                     mainContent.innerHTML = html;
                     attachAjaxFormHandler();
-                    // Khởi tạo Select2 cho các thẻ mới tải về
                     if (typeof $ !== 'undefined') {
                         $('.search-select').select2({ width: '100%', tags: true });
                     }
@@ -433,7 +429,6 @@
             if (userInfo.role === 'admin') loadContent('admin_dashboard.php');
         });
 
-        // Click ra ngoài để đóng modal/dropdown
         window.onclick = function(e) {
             if (e.target.classList.contains('modal-overlay')) e.target.style.display = 'none';
             if (!e.target.closest('.btn-avatar') && !e.target.closest('#avatarDropdown')) {
