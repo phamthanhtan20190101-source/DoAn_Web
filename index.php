@@ -546,19 +546,8 @@
                 }
             });
         });
-        const menuItems = document.querySelectorAll('.menu-item');
-            menuItems.forEach(item => {
-            item.addEventListener('click', function() {
-                // Xóa class 'active' khỏi tất cả các nút
-                menuItems.forEach(i => i.classList.remove('active'));
-                // Thêm class 'active' vào nút vừa được click
-                this.classList.add('active');
-            });
-        });
-
 
         showWelcome();
-<<<<<<< HEAD
             // --- HÀM XÓA DÀNH CHO TOÀN BỘ HỆ THỐNG ---
         window.deleteSong = function(songId) {
             if (!confirm('Bạn có chắc muốn xóa bài hát này? Thao tác này không thể hoàn tác!')) return;
@@ -591,9 +580,6 @@
                 }
             }).catch(err => alert('Lỗi hệ thống khi xóa!'));
         };
-=======
-        </script> <script src="player.js"></script> <script> showWelcome();
->>>>>>> 2019dc217c3f7884dd962b74b54d3fe21b9284e1
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
