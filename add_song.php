@@ -52,9 +52,25 @@ $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name A
         </label>
         <label>
             Ngày phát hành
-            <input type="date" name="release_date">
+            <input type="date" name="release_date" max="<?php echo date('Y-m-d'); ?>" id="releaseDateInput">
         </label>
         <button type="submit" class="btn-admin">Lưu bài hát</button>
     </div>
 </form>
+<script>
+    // Kiểm tra dung lượng file ngay khi vừa chọn xong
+    const fileInput = document.querySelector('input[name="audio_file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const maxSize = 50 * 1024 * 1024; // 50MB
+                if (file.size > maxSize) {
+                    alert("Cảnh báo: File của bạn nặng " + (file.size / (1024*1024)).toFixed(2) + "MB. Vui lòng chọn file dưới 50MB!");
+                    this.value = ""; // Lập tức xóa file khỏi ô chọn
+                }
+            }
+        });
+    }
+</script>
 <?php $conn->close(); ?>

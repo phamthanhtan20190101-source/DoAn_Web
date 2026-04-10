@@ -38,10 +38,28 @@ function validateMp3Upload(array $file) {
     if ($file['error'] !== UPLOAD_ERR_OK) {
         throw new RuntimeException('Lỗi upload file: ' . $file['error']);
     }
+
+    // 1. Ràng buộc dung lượng (Tối đa 50MB)
+    $maxSize = 50 * 1024 * 1024; // 50MB
+    if ($file['size'] > $maxSize) {
+        throw new RuntimeException('Dung lượng file vượt mức cho phép (Tối đa 50MB).');
+    }
+
+    // 2. Ràng buộc đuôi file (Bề mặt)
     $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     if ($extension !== 'mp3') {
-        throw new RuntimeException('Chỉ chấp nhận file MP3.');
+        throw new RuntimeException('Chỉ chấp nhận file có đuôi .mp3');
     }
+
+    // 3. Ràng buộc MIME Type (Soi lõi thực sự của file)
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mimeType = $finfo->file($file['tmp_name']);
+    
+    // audio/mpeg là chuẩn MIME thực sự của file mp3
+    if ($mimeType !== 'audio/mpeg' && $mimeType !== 'audio/mp3') {
+        throw new RuntimeException('Phát hiện file giả mạo định dạng! (Định dạng thật: ' . $mimeType . ')');
+    }
+
     return true;
 }
 
@@ -158,6 +176,19 @@ try {
         if (empty($title) || $genreId <= 0 || $artistId <= 0) {
             throw new RuntimeException('Vui lòng điền đầy đủ thông tin bắt buộc.');
         }
+
+        // --- ĐOẠN CHỐNG TRÙNG LẶP ---
+        $stmtCheck = $conn->prepare("SELECT s.SongID FROM songs s JOIN song_artist sa ON s.SongID = sa.SongID WHERE s.Title = ? AND sa.ArtistID = ?");
+        $stmtCheck->bind_param('si', $title, $artistId);
+        $stmtCheck->execute();
+        $stmtCheck->store_result();
+        if ($stmtCheck->num_rows > 0) {
+            $stmtCheck->close();
+            throw new RuntimeException('Lỗi: Bài hát "' . htmlspecialchars($title) . '" của nghệ sĩ này đã tồn tại trong hệ thống!');
+        }
+        $stmtCheck->close();
+        // ------------------------------
+
         if (!isset($_FILES['audio_file'])) {
             throw new RuntimeException('Chưa chọn file MP3.');
         }
