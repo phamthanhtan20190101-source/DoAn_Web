@@ -277,7 +277,7 @@
 
             <div class="sidebar-scroll">
                 <ul class="menu-list">
-                    <li class="menu-item"><i class="fa-solid fa-layer-group"></i> Thư Viện</li>
+                    <li class="menu-item" onclick="loadContent('library.php')" style="cursor: pointer;"><i class="fa-solid fa-layer-group"></i> Thư Viện</li>
                     <li class="menu-item active"><i class="fa-regular fa-circle-dot"></i> Khám Phá</li>
                     <li class="menu-item"><i class="fa-solid fa-chart-line"></i> #Lyrxchart</li>
                     <li class="menu-item"><i class="fa-solid fa-podcast"></i> Phòng Nhạc <span class="live-badge">LIVE</span></li>
@@ -546,8 +546,19 @@
                 }
             });
         });
+        const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                // Xóa class 'active' khỏi tất cả các nút
+                menuItems.forEach(i => i.classList.remove('active'));
+                // Thêm class 'active' vào nút vừa được click
+                this.classList.add('active');
+            });
+        });
+
 
         showWelcome();
+<<<<<<< HEAD
             // --- HÀM XÓA DÀNH CHO TOÀN BỘ HỆ THỐNG ---
         window.deleteSong = function(songId) {
             if (!confirm('Bạn có chắc muốn xóa bài hát này? Thao tác này không thể hoàn tác!')) return;
@@ -580,6 +591,9 @@
                 }
             }).catch(err => alert('Lỗi hệ thống khi xóa!'));
         };
+=======
+        </script> <script src="player.js"></script> <script> showWelcome();
+>>>>>>> 2019dc217c3f7884dd962b74b54d3fe21b9284e1
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
