@@ -284,15 +284,17 @@
         <!-- Admin menu bên phải -->
         <aside class="admin-sidebar">
             <h3>Admin Menu</h3>
-            <button type="button" class="btn-admin" onclick="loadContent('admin_songs.php')">Bài hát</button>
-            
-            <button type="button" class="btn-admin" onclick="loadContent('admin_genres.php')">Thể loại</button>
-            <button type="button" class="btn-admin" onclick="loadContent('admin_artists.php')">Nghệ sĩ</button>
-            <button type="button" class="btn-admin" onclick="loadContent('admin_albums.php')">Albums</button>
-            
-            <button type="button" class="btn-admin" onclick="loadContent('admin_users.php')">Người dùng</button>
-            <button type="button" class="btn-admin" onclick="loadContent('admin_playlists.php')">Playlist</button>
-        </aside>
+                <button type="button" class="btn-admin" style="background-color: #10b981;" onclick="loadContent('admin_dashboard.php')">Bảng điều khiển</button>
+    
+                <button type="button" class="btn-admin" style="background-color: #ea580c;" onclick="loadContent('approve_songs.php')">Duyệt bài hát chờ</button>
+    
+                <button type="button" class="btn-admin" onclick="loadContent('admin_songs.php')">Bài hát</button>
+                <button type="button" class="btn-admin" onclick="loadContent('admin_genres.php')">Thể loại</button>
+                <button type="button" class="btn-admin" onclick="loadContent('admin_artists.php')">Nghệ sĩ</button>
+                <button type="button" class="btn-admin" onclick="loadContent('admin_albums.php')">Albums</button>
+    
+                <button type="button" class="btn-admin" onclick="loadContent('admin_users.php')">Người dùng</button>
+                <button type="button" class="btn-admin" onclick="loadContent('admin_comments.php')">Bình luận & Báo cáo</button>
         <?php endif; ?>
     </div>
 
@@ -513,6 +515,15 @@
         showWelcome();
         </script> <script src="player.js"></script> <script> showWelcome();
     </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Nếu là Admin thì tự động load Dashboard lên đầu tiên
+        const isAdmin = <?php echo (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? 'true' : 'false'; ?>;
+        if (isAdmin) {
+            loadContent('admin_dashboard.php');
+        }
+    });
+</script>
 
 </body>
 </html>

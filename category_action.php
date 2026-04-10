@@ -69,7 +69,10 @@ if (stripos($contentType, 'application/json') !== false) {
                 }
                 $stmtImg->close();
             }
-        } else {
+        } elseif ($type === 'comment') {
+            $table = 'comments'; $idColumn = 'CommentID';
+        }
+        else {
             sendJsonResponse(false, 'Loại danh mục không hợp lệ.');
         }
 
