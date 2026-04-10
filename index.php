@@ -208,51 +208,6 @@
             background: var(--purple-primary); color: white; border: none; padding: 8px 15px;
             border-radius: 5px; font-size: 12px; cursor: pointer;
         }
-        /* ================= CUSTOM SELECT2 DARK MODE ================= */
-/* Màu chữ trong ô tìm kiếm và danh sách gợi ý */
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #fff !important;
-    line-height: 40px;
-}
-
-/* Nền của ô chọn chính */
-.select2-container--default .select2-selection--single {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    height: 40px !important;
-    border-radius: 5px !important;
-}
-
-/* Khung danh sách gợi ý đổ xuống */
-.select2-dropdown {
-    background-color: #231b2e !important; /* Màu nền sidebar của bạn */
-    border: 1px solid var(--purple-primary) !important;
-    color: #fff !important;
-}
-
-/* Ô input tìm kiếm bên trong danh sách đổ xuống */
-.select2-container--default .select2-search--dropdown .select2-search__field {
-    background-color: #170f23 !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: #fff !important;
-}
-
-/* Màu chữ của từng item trong danh sách */
-.select2-container--default .select2-results__option {
-    color: #fff !important;
-}
-
-/* Màu nền khi di chuột qua (hover) hoặc khi item được chọn */
-.select2-container--default .select2-results__option--highlighted[aria-selected],
-.select2-container--default .select2-results__option[aria-selected=true] {
-    background-color: var(--purple-primary) !important;
-    color: #white !important;
-}
-
-/* Màu chữ placeholder */
-.select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: #ffffff80 !important;
-}
     </style>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -558,42 +513,7 @@
 
 
         showWelcome();
-<<<<<<< HEAD
-            // --- HÀM XÓA DÀNH CHO TOÀN BỘ HỆ THỐNG ---
-        window.deleteSong = function(songId) {
-            if (!confirm('Bạn có chắc muốn xóa bài hát này? Thao tác này không thể hoàn tác!')) return;
-            fetch('song_action.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'same-origin',
-                body: JSON.stringify({action: 'delete', songId: songId})
-            }).then(res => res.json()).then(data => {
-                alert(data.message || 'Đã xóa.');
-                if (data.success) loadContent('admin_songs.php');
-            }).catch(err => alert('Lỗi hệ thống khi xóa!'));
-        };
-
-        window.deleteCategory = function(type, id) {
-            if (!confirm('Bạn có chắc chắn muốn xóa dữ liệu này? Thao tác này không thể hoàn tác!')) return;
-            fetch('category_action.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'same-origin',
-                body: JSON.stringify({action: 'delete', type: type, id: id})
-            }).then(res => res.json()).then(data => {
-                alert(data.message);
-                if (data.success) {
-                    let reloadUrl = 'admin_genres.php';
-                    if (type === 'artist') reloadUrl = 'admin_artists.php';
-                    if (type === 'album') reloadUrl = 'admin_albums.php';
-                    if (type === 'comment') reloadUrl = 'admin_comments.php';
-                    loadContent(reloadUrl);
-                }
-            }).catch(err => alert('Lỗi hệ thống khi xóa!'));
-        };
-=======
         </script> <script src="player.js"></script> <script> showWelcome();
->>>>>>> 2019dc217c3f7884dd962b74b54d3fe21b9284e1
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
