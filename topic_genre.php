@@ -5,8 +5,14 @@ $conn->set_charset('utf8mb4');
 
 // Lấy danh sách Thể loại
 $genres = $conn->query("SELECT * FROM genres ORDER BY Name ASC");
-// Lấy danh sách Nghệ sĩ nổi bật (Top 8 nghệ sĩ có nhiều lượt nghe nhất)
-$artists = $conn->query("SELECT a.ArtistID, a.Name, SUM(s.PlayCount) as TotalPlays FROM artists a JOIN song_artist sa ON a.ArtistID = sa.ArtistID JOIN songs s ON sa.SongID = s.SongID GROUP BY a.ArtistID ORDER BY TotalPlays DESC LIMIT 8");
+
+// ĐÃ SỬA: Thêm cột a.Image_URL vào câu lệnh truy vấn
+$artists = $conn->query("SELECT a.ArtistID, a.Name, a.Image_URL, SUM(s.PlayCount) as TotalPlays 
+                         FROM artists a 
+                         JOIN song_artist sa ON a.ArtistID = sa.ArtistID 
+                         JOIN songs s ON sa.SongID = s.SongID 
+                         GROUP BY a.ArtistID 
+                         ORDER BY TotalPlays DESC LIMIT 8");
 ?>
 
 <style>
@@ -54,6 +60,7 @@ $artists = $conn->query("SELECT a.ArtistID, a.Name, SUM(s.PlayCount) as TotalPla
     .artist-circle .circle { 
         width: 140px; height: 140px; border-radius: 50%; background: linear-gradient(135deg, #4e346b, #231b2e);
         margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        overflow: hidden; /* Quan trọng: Đảm bảo ảnh bên trong không bị tràn ra ngoài hình tròn */
     }
     .artist-circle h4 { color: white; margin: 0; font-size: 15px; font-weight: 600; }
 </style>
@@ -98,7 +105,11 @@ $artists = $conn->query("SELECT a.ArtistID, a.Name, SUM(s.PlayCount) as TotalPla
         <?php if ($artists && $artists->num_rows > 0): while($a = $artists->fetch_assoc()): ?>
             <div class="artist-circle" onclick="loadContent('category_view.php?type=artist&val=<?php echo $a['ArtistID']; ?>&name=<?php echo urlencode($a['Name']); ?>')">
                 <div class="circle">
-                    <i class="fa-solid fa-microphone-lines" style="font-size: 50px; color: var(--purple-primary); opacity: 0.5;"></i>
+                    <?php if (!empty($a['Image_URL'])): ?>
+                        <img src="<?php echo htmlspecialchars($a['Image_URL']); ?>" alt="<?php echo htmlspecialchars($a['Name']); ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                    <?php else: ?>
+                        <i class="fa-solid fa-microphone-lines" style="font-size: 50px; color: var(--purple-primary); opacity: 0.5;"></i>
+                    <?php endif; ?>
                 </div>
                 <h4><?php echo htmlspecialchars($a['Name']); ?></h4>
             </div>

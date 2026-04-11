@@ -13,6 +13,7 @@ if ($songId <= 0) {
 
 $servername = "localhost"; $username = "root"; $password = "vertrigo"; $dbname = "song_management";
 $conn = new mysqli($servername, $username, $password, $dbname);
+$albumResult = $conn->query("SELECT AlbumID, Title FROM albums ORDER BY Title ASC");
 
 // Truy vấn lấy dữ liệu bao gồm cả cột Lyrics
 $stmt = $conn->prepare('SELECT s.SongID, s.Title, s.ReleaseDate, s.FilePath_URL, s.GenreID, s.Lyrics, GROUP_CONCAT(sa.ArtistID) AS ArtistIDs
@@ -72,6 +73,16 @@ $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['Artist
                     <option value="<?php echo $artist['ArtistID']; ?>" <?php echo in_array($artist['ArtistID'], $currentArtistIdsArray) ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($artist['Name'], ENT_QUOTES, 'UTF-8'); ?>
                     </option>
+                <?php endwhile; ?>
+            </select>
+        </label>
+
+        <label>
+            Album (Tùy chọn)
+            <select name="album_id" class="search-select" style="width: 100%;">
+                <option value="">-- Không thuộc Album nào --</option>
+                <?php while ($album = $albumResult->fetch_assoc()): ?>
+                    <option value="<?php echo $album['AlbumID']; ?>"><?php echo htmlspecialchars($album['Title'], ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php endwhile; ?>
             </select>
         </label>

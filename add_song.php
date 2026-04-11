@@ -10,6 +10,7 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 
 $genreResult = $conn->query("SELECT GenreID, Name FROM genres ORDER BY Name ASC");
 $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name ASC");
+$albumResult = $conn->query("SELECT AlbumID, Title FROM albums ORDER BY Title ASC");
 ?>
 <h2>Thêm bài hát mới</h2>
 
@@ -101,6 +102,16 @@ $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name A
             <select name="artist_ids[]" class="search-select" multiple="multiple" required style="width: 100%;">
                 <?php while ($artist = $artistResult->fetch_assoc()): ?>
                     <option value="<?php echo $artist['ArtistID']; ?>"><?php echo htmlspecialchars($artist['Name'], ENT_QUOTES, 'UTF-8'); ?></option>
+                <?php endwhile; ?>
+            </select>
+        </label>
+
+        <label>
+            Album (Tùy chọn)
+            <select name="album_id" class="search-select" style="width: 100%;">
+                <option value="">-- Không thuộc Album nào --</option>
+                <?php while ($album = $albumResult->fetch_assoc()): ?>
+                    <option value="<?php echo $album['AlbumID']; ?>"><?php echo htmlspecialchars($album['Title'], ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php endwhile; ?>
             </select>
         </label>

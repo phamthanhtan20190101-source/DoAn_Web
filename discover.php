@@ -5,6 +5,7 @@ include_once 'render_helper.php';
 
 $conn = new mysqli("localhost", "root", "vertrigo", "song_management");
 $conn->set_charset('utf8mb4');
+$albumsQuery = $conn->query("SELECT * FROM albums ORDER BY AlbumID DESC LIMIT 5");
 
 // Đảm bảo các bảng luôn tồn tại để không bị lỗi
 $conn->query("CREATE TABLE IF NOT EXISTS user_favorites (Username VARCHAR(100), SongID INT, PRIMARY KEY(Username, SongID))");
@@ -75,6 +76,28 @@ $index = 0;
         <div class="slider-dots" id="sliderDots"></div>
     </div>
 
+    <style>
+        .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .album-item { cursor: pointer; transition: 0.3s; }
+        .album-item:hover .album-cover-box img { transform: scale(1.1); }
+        .album-cover-box { width: 100%; aspect-ratio: 1/1; border-radius: 8px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .album-cover-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+        .album-item h4 { color: white; font-size: 15px; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .album-item p { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0; }
+    </style>
+
+    <h2 style="color:white; margin-bottom:20px;">Album Hot</h2>
+    <div class="album-grid">
+        <?php while($alb = $albumsQuery->fetch_assoc()): ?>
+        <div class="album-item" onclick="loadContent('album_view.php?id=<?php echo $alb['AlbumID']; ?>')">
+            <div class="album-cover-box">
+                <img src="<?php echo $alb['CoverImage_URL']; ?>" alt="">
+            </div>
+            <h4><?php echo htmlspecialchars($alb['Title']); ?></h4>
+            <p>Phát hành: <?php echo $alb['ReleaseYear']; ?></p>
+        </div>
+        <?php endwhile; ?>
+    </div>
     <h2 style="color:white; margin-bottom:5px;">Mới Phát Hành</h2>
     
     <div class="song-list-container">
