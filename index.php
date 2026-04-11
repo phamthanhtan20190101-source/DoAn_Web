@@ -239,12 +239,35 @@
 
     <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin'): ?>
     <footer class="player">
-        <div class="player-left"><div class="song-thumb"></div><div class="song-info"><div class="song-title">...</div><div class="song-artist">...</div></div></div>
-        <div class="player-center">
-            <div class="control-buttons"><i class="fa-solid fa-shuffle"></i><i class="fa-solid fa-backward-step"></i><i class="fa-regular fa-circle-play btn-play"></i><i class="fa-solid fa-forward-step"></i><i class="fa-solid fa-repeat"></i></div>
-            <div class="progress-container"><span>00:00</span><div class="progress-bar"><div class="current-progress"></div></div><span>00:00</span></div>
+        <div class="player-left">
+            <div class="song-thumb"></div>
+            <div class="song-info">
+                <div class="song-title">...</div>
+                <div class="song-artist">...</div>
+            </div>
         </div>
-        <div class="player-right"><i class="fa-solid fa-volume-high"></i><div class="volume-bar"></div></div>
+        <div class="player-center">
+            <div class="control-buttons">
+                <i class="fa-solid fa-shuffle btn-shuffle"></i>
+                <i class="fa-solid fa-backward-step btn-prev"></i>
+                <i class="fa-regular fa-circle-play btn-play"></i>
+                <i class="fa-solid fa-forward-step btn-next"></i>
+                <i class="fa-solid fa-repeat btn-repeat"></i>
+            </div>
+            <div class="progress-container">
+                <span class="time-current">00:00</span>
+                <div class="progress-bar">
+                    <div class="current-progress"></div>
+                </div>
+                <span class="time-total">00:00</span>
+            </div>
+        </div>
+        <div class="player-right">
+            <i class="fa-solid fa-volume-high"></i>
+            <div class="volume-bar">
+                <div class="current-volume" style="width: 50%;"></div>
+            </div>
+        </div>
     </footer>
     <?php endif; ?>
 
@@ -273,6 +296,84 @@
             <div style="font-size: 13px; margin-top: 15px; color: var(--text-secondary); cursor: pointer;" onclick="openLoginModal()">Đã có tài khoản? Đăng nhập</div>
         </div>
     </div>
+
+    <div id="addToPlaylistModal" class="modal-overlay" style="z-index: 2500;">
+        <div class="modal-content" style="width: 350px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;">
+            <h3 style="color: white; margin-bottom: 20px; font-size: 18px;">Thêm vào Playlist</h3>
+            
+            <div id="playlistNotify" style="display: none; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: bold; text-align: center; transition: 0.3s;"></div>
+
+            <div id="userPlaylistsContainer" style="max-height: 250px; overflow-y: auto; text-align: left; margin-bottom: 20px; border-radius: 8px; background: rgba(0,0,0,0.2);">
+                </div>
+            
+            <button onclick="closeAddToPlaylistModal()" style="width: 100%; background: transparent; padding: 10px; border-radius: 20px; color: white; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Đóng</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIC XỬ LÝ THÊM VÀO PLAYLIST ---
+        let currentSongIdToAdd = 0;
+
+        window.openAddToPlaylistModal = function(songId) {
+            if (!isLoggedIn) { alert('Vui lòng đăng nhập để sử dụng tính năng này!'); return; }
+            currentSongIdToAdd = songId;
+            
+            const notify = document.getElementById('playlistNotify');
+            if (notify) notify.style.display = 'none';
+
+            document.getElementById('addToPlaylistModal').style.display = 'flex';
+            
+            fetch('user_action.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=get_user_playlists'
+            })
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('userPlaylistsContainer');
+                if (data.success && data.playlists.length > 0) {
+                    container.innerHTML = data.playlists.map(pl => `
+                        <div onclick="submitAddSongToPlaylist(${pl.PlaylistID})" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; cursor: pointer; transition: 0.2s; display: flex; align-items: center;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                            <i class="fa-solid fa-list-music" style="margin-right: 12px; color: var(--purple-primary); font-size: 16px;"></i> 
+                            <span style="font-weight: 500; font-size: 14px;">${pl.Title}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="color: gray; text-align: center; padding: 20px;">Bạn chưa có Playlist nào.<br><br><small>Hãy vào Thư viện để tạo Playlist nhé!</small></p>';
+                }
+            });
+        };
+
+        window.closeAddToPlaylistModal = function() {
+            document.getElementById('addToPlaylistModal').style.display = 'none';
+        };
+
+        window.submitAddSongToPlaylist = function(playlistId) {
+            fetch('user_action.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=add_to_playlist&song_id=${currentSongIdToAdd}&playlist_id=${playlistId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                const notify = document.getElementById('playlistNotify');
+                notify.style.display = 'block';
+                notify.textContent = data.message;
+
+                if (data.success) {
+                    notify.style.background = 'rgba(16, 185, 129, 0.15)';
+                    notify.style.color = '#10b981';
+                    notify.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    setTimeout(() => { closeAddToPlaylistModal(); }, 1500);
+                } else {
+                    notify.style.background = 'rgba(239, 68, 68, 0.15)';
+                    notify.style.color = '#ef4444';
+                    notify.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    setTimeout(() => { notify.style.display = 'none'; }, 3000);
+                }
+            });
+        };
+    </script>
 
     <script>
         const mainContent = document.getElementById('main-content-area');
@@ -347,6 +448,25 @@
             fetch('category_action.php', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'delete', type: type, id: id}) }).then(res => res.json()).then(data => { alert(data.message); if (data.success) { const reloadMap = { 'genre': 'admin_genres.php', 'artist': 'admin_artists.php', 'album': 'admin_albums.php', 'comment': 'admin_comments.php', 'banner': 'admin_banners.php' }; loadContent(reloadMap[type]); } });
         };
 
+        window.toggleFavorite = function(songId, btn) {
+            if (!isLoggedIn) { alert('Vui lòng đăng nhập để thả tim!'); return; }
+            fetch('user_action.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=toggle_favorite&song_id=' + songId
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    if (data.status === 'added') {
+                        btn.className = 'fa-solid fa-heart action-sub-icon btn-heart';
+                        btn.style.color = '#ff4081';
+                    } else {
+                        btn.className = 'fa-regular fa-heart action-sub-icon btn-heart';
+                        btn.style.color = 'white';
+                    }
+                } else alert(data.message);
+            });
+        };
+
         const searchInput = document.querySelector('.search-bar input');
         let searchTimer;
         if (searchInput) {
@@ -366,7 +486,7 @@
             mainApp.addEventListener('click', function(e) { const menuItem = e.target.closest('.menu-item'); if (menuItem) { document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active')); menuItem.classList.add('active'); } });
         });
     </script>
-    <script src="player.js"></script>
+    <script src="player.js?v=<?php echo time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
