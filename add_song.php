@@ -69,7 +69,7 @@ $albumResult = $conn->query("SELECT AlbumID, Title FROM albums ORDER BY Title AS
     }
 </style>
 
-<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-delay-reload-url="add_song.php" onsubmit="this.querySelector('button[type=submit]').disabled = true; this.querySelector('button[type=submit]').innerText = 'Đang tải lên...';">
+<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true">
     <input type="hidden" name="action" value="create">
     <div style="color: white; display: flex; flex-direction: column; gap: 15px; max-width: 500px; margin-top: 15px;">
         
