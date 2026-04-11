@@ -265,3 +265,130 @@ window.renderHistory = function(containerId) {
 
     container.innerHTML = htmlString + historyDataDiv;
 };
+
+// =========================================================================
+// HỆ THỐNG LỜI BÀI HÁT ĐỒNG BỘ (LYRICS SYNC ENGINE)
+// =========================================================================
+
+let parsedLyrics = [];
+let activeLyricIndex = -1;
+
+function playAndShowLyric(btn) {
+    // 1. Kích hoạt phát bài hát đó (Giả lập việc click vào nguyên dòng bài hát)
+    btn.closest('.song-item-wrapper').click();
+    // 2. Mở Panel Lyrics lên
+    setTimeout(() => openLyricPanel(), 300);
+}
+
+function openLyricPanel() {
+    if (!playlist[currentIndex]) return;
+    const song = playlist[currentIndex];
+    
+    // Cập nhật thông tin Ảnh, Tên, Ca sĩ
+    document.getElementById('lyricCover').src = song.cover || 'assets/default-cover.jpg';
+    document.getElementById('lyricBgBlur').style.backgroundImage = `url('${song.cover}')`;
+    document.getElementById('lyricTitle').textContent = song.title;
+    document.getElementById('lyricArtist').textContent = song.artist;
+    
+    // Mở Panel
+    document.getElementById('lyricPanel').classList.add('show');
+    
+    // Tải lời bài hát từ Database
+    document.getElementById('lyricContainer').innerHTML = '<div class="lyric-line" style="color:white; font-size:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải lời bài hát...</div>';
+    
+    fetch(`get_lyrics.php?id=${song.id}`)
+        .then(res => res.json())
+        .then(data => {
+            parseLyrics(data.lyrics);
+            renderLyrics();
+        });
+}
+
+function closeLyricPanel() {
+    document.getElementById('lyricPanel').classList.remove('show');
+}
+
+// Thuật toán bóc tách thời gian [mm:ss.xx]
+function parseLyrics(rawText) {
+    parsedLyrics = [];
+    if (!rawText || rawText.trim() === '') {
+        parsedLyrics.push({ time: -1, text: "🎶 Chưa có lời bài hát cho ca khúc này 🎶" });
+        return;
+    }
+    
+    const lines = rawText.split('\n');
+    const regex = /\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)/; // Bắt mẫu [00:15.50] Lời...
+    
+    lines.forEach(line => {
+        const match = line.match(regex);
+        if (match) {
+            const m = parseInt(match[1]);
+            const s = parseInt(match[2]);
+            const ms = parseInt(match[3]);
+            const time = m * 60 + s + ms / (match[3].length === 3 ? 1000 : 100);
+            const text = match[4].trim();
+            if (text) parsedLyrics.push({ time, text });
+        } else if (line.trim() !== '') {
+            // Nếu không có thời gian thì hiển thị dạng tĩnh
+            parsedLyrics.push({ time: -1, text: line.trim() });
+        }
+    });
+}
+
+// In chữ ra màn hình
+function renderLyrics() {
+    const container = document.getElementById('lyricContainer');
+    container.innerHTML = '';
+    
+    parsedLyrics.forEach((lyric, index) => {
+        const div = document.createElement('div');
+        div.className = 'lyric-line';
+        div.id = 'lyric-line-' + index;
+        div.textContent = lyric.text;
+        
+        // Bấm vào dòng chữ nào thì nhạc tua tới khúc đó
+        if(lyric.time !== -1) {
+            div.onclick = () => { 
+                currentAudio.currentTime = lyric.time; 
+                if(currentAudio.paused) currentAudio.play();
+            };
+        }
+        container.appendChild(div);
+    });
+    activeLyricIndex = -1; // Reset
+}
+
+// VÒNG LẶP KIỂM TRA THỜI GIAN NHẠC ĐỂ CHẠY CHỮ (Chạy ngầm liên tục)
+setInterval(() => {
+    const panel = document.getElementById('lyricPanel');
+    if (!currentAudio || currentAudio.paused || !panel.classList.contains('show') || parsedLyrics.length === 0 || parsedLyrics[0].time === -1) return;
+
+    const currentTime = currentAudio.currentTime;
+    
+    // Tìm dòng hiện tại
+    let newActiveIndex = -1;
+    for (let i = 0; i < parsedLyrics.length; i++) {
+        if (currentTime >= parsedLyrics[i].time) {
+            newActiveIndex = i;
+        } else {
+            break;
+        }
+    }
+
+    // Nếu chuyển sang dòng mới -> Đổi màu chữ và tự động cuộn (Scroll)
+    if (newActiveIndex !== -1 && newActiveIndex !== activeLyricIndex) {
+        if (activeLyricIndex !== -1) {
+            const oldEl = document.getElementById('lyric-line-' + activeLyricIndex);
+            if(oldEl) oldEl.classList.remove('active');
+        }
+        
+        activeLyricIndex = newActiveIndex;
+        const newEl = document.getElementById('lyric-line-' + activeLyricIndex);
+        
+        if (newEl) {
+            newEl.classList.add('active');
+            // Cuộn cho dòng chữ luôn nằm ở giữa màn hình
+            newEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+}, 100);

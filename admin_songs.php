@@ -61,28 +61,28 @@ $result = $conn->query($query);
 // Hàm xử lý hiện/ẩn trình phát nhạc mini
 function togglePreview(url, id) {
     const container = document.getElementById('preview-container-' + id);
-    
-    // Nếu đang hiện trình phát thì thu hồi lại nút bấm
+
     if (container.querySelector('audio')) {
+        // Khôi phục lại nút bấm ban đầu
         container.innerHTML = `<button type="button" class="btn-admin" style="background: #3b82f6; padding: 5px 12px;" onclick="togglePreview('${url}', ${id})"><i class="fa-solid fa-play"></i> Nghe thử</button>`;
     } else {
-        // Tắt tất cả các trình phát khác đang mở để tránh ồn
-        document.querySelectorAll('[id^="preview-container-"]').forEach(c => {
-            if (c.querySelector('audio')) {
-                const oldId = c.id.replace('preview-container-', '');
-                const oldUrl = c.querySelector('audio source').src;
-                // Trả về nút bấm cũ (lưu ý: cần xử lý chuỗi URL cẩn thận ở đây)
-                // Để đơn giản, ta chỉ cần reset lại HTML của tất cả
+        // Tắt các audio đang phát khác (để tránh ồn 2 bài cùng lúc)
+        document.querySelectorAll('audio').forEach(aud => {
+            const box = aud.closest('[id^="preview-container-"]');
+            if(box) {
+                const oldId = box.id.split('-')[2];
+                const oldUrl = aud.querySelector('source').src;
+                box.innerHTML = `<button type="button" class="btn-admin" style="background: #3b82f6; padding: 5px 12px;" onclick="togglePreview('${oldUrl}', ${oldId})"><i class="fa-solid fa-play"></i> Nghe thử</button>`;
             }
         });
 
-        // Hiện trình phát audio tại đúng dòng đó
+        // Bật Audio cho dòng hiện tại
         container.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px;">
                 <audio controls autoplay style="height: 30px; width: 200px;">
                     <source src="${url}" type="audio/mpeg">
                 </audio>
-                <i class="fa-solid fa-xmark" style="cursor:pointer; color:#ef4444;" onclick="togglePreview('${url}', ${id})"></i>
+                <i class="fa-solid fa-xmark" style="cursor:pointer; color:#ef4444; font-size: 18px;" onclick="togglePreview('${url}', ${id})"></i>
             </div>
         `;
     }

@@ -16,7 +16,7 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 $albumResult = $conn->query("SELECT AlbumID, Title FROM albums ORDER BY Title ASC");
 
 // Truy vấn lấy dữ liệu bao gồm cả cột Lyrics
-$stmt = $conn->prepare('SELECT s.SongID, s.Title, s.ReleaseDate, s.FilePath_URL, s.GenreID, s.Lyrics, GROUP_CONCAT(sa.ArtistID) AS ArtistIDs
+$stmt = $conn->prepare('SELECT s.SongID, s.Title, s.ReleaseDate, s.FilePath_URL, s.CoverImage_URL, s.GenreID, s.AlbumID, s.Lyrics, GROUP_CONCAT(sa.ArtistID) AS ArtistIDs
                         FROM songs s
                         LEFT JOIN song_artist sa ON sa.SongID = s.SongID
                         WHERE s.SongID = ?
@@ -50,6 +50,19 @@ $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['Artist
         <label>
             Tên bài hát
             <input type="text" name="title" value="<?php echo htmlspecialchars($song['Title'], ENT_QUOTES, 'UTF-8'); ?>" required style="width: 100%; padding: 8px; margin-top: 5px;">
+        </label>
+
+        <label>
+            Ảnh bìa hiện tại:
+            <div style="margin-top: 5px; margin-bottom: 10px;">
+                <?php if(!empty($song['CoverImage_URL'])): ?>
+                    <img src="<?php echo htmlspecialchars($song['CoverImage_URL']); ?>" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 2px solid var(--purple-primary);">
+                <?php else: ?>
+                    <span style="color: gray; font-style: italic;">Chưa có ảnh bìa</span>
+                <?php endif; ?>
+            </div>
+            Chọn ảnh bìa mới (Bỏ trống nếu muốn giữ nguyên ảnh cũ)
+            <input type="file" name="cover_image" accept="image/*" style="margin-top: 5px; width: 100%;">
         </label>
         
         <label>

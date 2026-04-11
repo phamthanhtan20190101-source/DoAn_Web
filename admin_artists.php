@@ -20,6 +20,7 @@ $result = $conn->query("SELECT * FROM artists ORDER BY ArtistID DESC");
         <thead>
             <tr>
                 <th>ID</th>
+                <th style="width: 60px; text-align: center;">Ảnh</th>
                 <th>Tên Nghệ Sĩ</th>
                 <th>Quốc Gia</th>
                 <th>Tiểu sử</th>
@@ -31,17 +32,28 @@ $result = $conn->query("SELECT * FROM artists ORDER BY ArtistID DESC");
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
                         <td><?php echo $row['ArtistID']; ?></td>
-                        <td><?php echo htmlspecialchars($row['Name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        
+                        <td style="text-align: center;">
+                            <?php if(!empty($row['Image_URL'])): ?>
+                                <img src="<?php echo htmlspecialchars($row['Image_URL'], ENT_QUOTES, 'UTF-8'); ?>" width="45" height="45" style="border-radius: 50%; object-fit: cover; border: 2px solid var(--purple-primary);">
+                            <?php else: ?>
+                                <div style="width:45px; height:45px; background: rgba(255,255,255,0.1); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; color:white;">
+                                    <i class="fa-solid fa-microphone"></i>
+                                </div>
+                            <?php endif; ?>
+                        </td>
+
+                        <td style="font-weight: bold;"><?php echo htmlspecialchars($row['Name'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo htmlspecialchars($row['Country'] ?? '-', ENT_QUOTES, 'UTF-8'); ?></td>
                         <td><?php echo htmlspecialchars(mb_strimwidth($row['Bio'] ?? '', 0, 50, '...'), ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
                             <button type="button" class="btn-admin" onclick="loadContent('edit_artist.php?id=<?php echo $row['ArtistID']; ?>')">Sửa</button>
-                            <button type="button" class="btn-admin" onclick="deleteCategory('artist', <?php echo $row['ArtistID']; ?>)">Xóa</button>
+                            <button type="button" class="btn-admin" style="background:#ef4444;" onclick="deleteCategory('artist', <?php echo $row['ArtistID']; ?>)">Xóa</button>
                         </td>
                     </tr>
                 <?php endwhile; ?>
             <?php else: ?>
-                <tr><td colspan="5">Không có nghệ sĩ nào.</td></tr>
+                <tr><td colspan="6">Không có nghệ sĩ nào.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

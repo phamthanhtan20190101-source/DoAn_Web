@@ -186,6 +186,23 @@ try {
             if ($existingPath) safeUnlink(__DIR__ . '/' . ltrim($existingPath, '/'));
         }
 
+        // XỬ LÝ UPLOAD ẢNH BÌA (COVER IMAGE)
+        $updatedCoverPath = null;
+        if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = 'uploads/covers/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            
+            $coverName = time() . '_cover_' . basename($_FILES['cover_image']['name']);
+            $updatedCoverPath = $uploadDir . $coverName;
+            move_uploaded_file($_FILES['cover_image']['tmp_name'], $updatedCoverPath);
+            
+            // Cập nhật riêng cột ảnh bìa vào CSDL
+            $stmtCover = $conn->prepare('UPDATE songs SET CoverImage_URL = ? WHERE SongID = ?');
+            $stmtCover->bind_param('si', $updatedCoverPath, $songId);
+            $stmtCover->execute();
+            $stmtCover->close();
+        }
+
         // CẬP NHẬT CẢ ALBUM VÀ LYRICS VÀO CÂU LỆNH UPDATE
         if ($updatedDuration !== null) {
             $stmt = $conn->prepare('UPDATE songs SET Title = ?, GenreID = ?, AlbumID = ?, ReleaseDate = ?, FilePath_URL = ?, Duration = ?, Lyrics = ? WHERE SongID = ?');

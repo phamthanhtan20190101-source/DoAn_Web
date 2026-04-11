@@ -19,7 +19,7 @@ if (!$album) {
 ?>
 <h2>Sửa Thông Tin Album</h2>
 
-<form action="category_action.php" method="POST" enctype="multipart/form-data" data-ajax="true">
+<form action="category_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-reload-url="admin_albums.php">
     <input type="hidden" name="action" value="update">
     <input type="hidden" name="type" value="album">
     <input type="hidden" name="id" value="<?php echo $album['AlbumID']; ?>">

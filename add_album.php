@@ -4,7 +4,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') exit();
 ?>
 <h2 style="color: white;">Thêm Album Mới</h2>
 
-<form action="category_action.php" method="POST" enctype="multipart/form-data" data-ajax="true">
+<form action="category_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-reload-url="admin_albums.php">
     <input type="hidden" name="action" value="create">
     <input type="hidden" name="type" value="album">
     

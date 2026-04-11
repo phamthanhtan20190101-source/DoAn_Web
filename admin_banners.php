@@ -1,4 +1,6 @@
 <?php
+session_start();
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['role'] !== 'admin') exit('Access Denied');
 $conn = new mysqli("localhost", "root", "vertrigo", "song_management");
 $result = $conn->query("SELECT * FROM banners ORDER BY OrderIndex ASC");
 ?>

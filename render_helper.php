@@ -40,7 +40,7 @@ function renderSongItem($row) {
             </div>
             <div class="action-hover">
                 <div class="icon-mv" title="MV">MV</div>
-                <i class="fa-solid fa-microphone action-sub-icon" title="Karaoke"></i>
+                <i class="fa-solid fa-file-lines action-sub-icon" title="Lời bài hát" onclick="playAndShowLyric(this); event.stopPropagation();"></i>
                 <i class="<?php echo $heartClass; ?> action-sub-icon btn-heart" style="color: <?php echo $heartColor; ?>;" title="Yêu thích" onclick="toggleFavorite(<?php echo $songId; ?>, this); event.stopPropagation();"></i>
                 <i class="fa-solid fa-circle-plus action-sub-icon" title="Thêm vào Playlist" onclick="openAddToPlaylistModal(<?php echo $songId; ?>); event.stopPropagation();"></i>
             </div>
