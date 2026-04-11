@@ -23,20 +23,21 @@ $result = $conn->query("SELECT * FROM genres ORDER BY GenreID DESC");
     <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-color: rgba(255,255,255,0.2); color: white; text-align: left;">
         <thead>
             <tr>
-                <th>ID</th>
+                <th style="width: 50px; text-align: center;">STT</th>
                 <th>Tên Thể Loại</th>
                 <th style="width: 150px;">Hành động</th>
             </tr>
         </thead>
+        
         <tbody>
             <?php if ($result && $result->num_rows > 0): ?>
-                <?php while ($row = $result->fetch_assoc()): ?>
+                <?php $stt = 1; ?> <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
-                        <td><?php echo $row['GenreID']; ?></td>
-                        <td><?php echo htmlspecialchars($row['Name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                        <td style="text-align: center; font-weight: bold;"><?php echo $stt++; ?></td>
+                        <td style="font-weight: 600;"><?php echo htmlspecialchars($row['Name'], ENT_QUOTES, 'UTF-8'); ?></td>
                         <td>
                             <button type="button" class="btn-admin" onclick="loadContent('edit_genre.php?id=<?php echo $row['GenreID']; ?>')">Sửa</button>
-                            <button type="button" class="btn-admin" onclick="deleteCategory('genre', <?php echo $row['GenreID']; ?>)">Xóa</button>
+                            <button type="button" class="btn-admin" style="background:#ef4444;" onclick="deleteCategory('genre', <?php echo $row['GenreID']; ?>)">Xóa</button>
                         </td>
                     </tr>
                 <?php endwhile; ?>
@@ -44,6 +45,7 @@ $result = $conn->query("SELECT * FROM genres ORDER BY GenreID DESC");
                 <tr><td colspan="3">Không có thể loại nào.</td></tr>
             <?php endif; ?>
         </tbody>
+
     </table>
 </div>
 

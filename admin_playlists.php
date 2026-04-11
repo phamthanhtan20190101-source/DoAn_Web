@@ -21,7 +21,7 @@ $result = $conn->query("SELECT p.*, a.Username FROM playlists p
     <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-color: rgba(255,255,255,0.1); text-align: left;">
         <thead style="background: rgba(255,255,255,0.05);">
             <tr>
-                <th>ID</th>
+                <th style="width: 50px; text-align: center;">STT</th>
                 <th>Tên Playlist</th>
                 <th>Người tạo</th>
                 <th>Ngày tạo</th>
@@ -30,9 +30,10 @@ $result = $conn->query("SELECT p.*, a.Username FROM playlists p
         </thead>
         <tbody>
             <?php if ($result && $result->num_rows > 0): ?>
+                <?php $stt = 1; ?>
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
-                        <td><?php echo $row['PlaylistID']; ?></td>
+                        <td style="text-align: center; font-weight: bold;"><?php echo $stt++; ?></td>
                         <td style="font-weight: 600; color: var(--purple-primary);">
                             <?php echo htmlspecialchars($row['Title']); ?>
                         </td>

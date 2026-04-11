@@ -47,6 +47,62 @@ if (stripos($contentType, 'application/json') !== false) {
 }
 
 // =========================================================================
+// [MỚI] XỬ LÝ TAGS ĐỘNG (TỰ ĐỘNG THÊM THỂ LOẠI / CA SĨ NẾU USER GÕ TAY)
+// =========================================================================
+if (in_array($action, ['create', 'update'])) {
+    $connAuto = getDbConnection();
+    
+    // 1. Xử lý Thể loại mới
+    $genreInput = $_POST['genre_id'] ?? '';
+    if (!empty($genreInput) && !is_numeric($genreInput)) {
+        $newGenre = trim($genreInput);
+        $stmt = $connAuto->prepare("SELECT GenreID FROM genres WHERE Name = ?");
+        $stmt->bind_param("s", $newGenre);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            $_POST['genre_id'] = $row['GenreID']; // Đã có trong DB -> Lấy ID
+        } else {
+            $stmtIns = $connAuto->prepare("INSERT INTO genres (Name) VALUES (?)");
+            $stmtIns->bind_param("s", $newGenre);
+            $stmtIns->execute();
+            $_POST['genre_id'] = $stmtIns->insert_id; // Thêm mới -> Lấy ID mới
+            $stmtIns->close();
+        }
+        $stmt->close();
+    }
+
+    // 2. Xử lý Ca sĩ mới
+    $artistInputs = $_POST['artist_ids'] ?? [];
+    $finalArtistIds = [];
+    if (is_array($artistInputs)) {
+        foreach ($artistInputs as $aInput) {
+            if (is_numeric($aInput)) {
+                $finalArtistIds[] = intval($aInput);
+            } elseif (!empty(trim($aInput))) {
+                $newArtist = trim($aInput);
+                $stmt = $connAuto->prepare("SELECT ArtistID FROM artists WHERE Name = ?");
+                $stmt->bind_param("s", $newArtist);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                if ($row = $res->fetch_assoc()) {
+                    $finalArtistIds[] = $row['ArtistID'];
+                } else {
+                    $stmtIns = $connAuto->prepare("INSERT INTO artists (Name, Country) VALUES (?, 'Chưa rõ')");
+                    $stmtIns->bind_param("s", $newArtist);
+                    $stmtIns->execute();
+                    $finalArtistIds[] = $stmtIns->insert_id;
+                    $stmtIns->close();
+                }
+                $stmt->close();
+            }
+        }
+        $_POST['artist_ids'] = $finalArtistIds;
+    }
+    $connAuto->close();
+}
+
+// =========================================================================
 // CHỐT KIỂM TRA RÀNG BUỘC DỮ LIỆU (VALIDATION CHECKPOINT)
 // =========================================================================
 if (in_array($action, ['create', 'update'])) {
@@ -186,23 +242,6 @@ try {
             if ($existingPath) safeUnlink(__DIR__ . '/' . ltrim($existingPath, '/'));
         }
 
-        // XỬ LÝ UPLOAD ẢNH BÌA (COVER IMAGE)
-        $updatedCoverPath = null;
-        if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = 'uploads/covers/';
-            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-            
-            $coverName = time() . '_cover_' . basename($_FILES['cover_image']['name']);
-            $updatedCoverPath = $uploadDir . $coverName;
-            move_uploaded_file($_FILES['cover_image']['tmp_name'], $updatedCoverPath);
-            
-            // Cập nhật riêng cột ảnh bìa vào CSDL
-            $stmtCover = $conn->prepare('UPDATE songs SET CoverImage_URL = ? WHERE SongID = ?');
-            $stmtCover->bind_param('si', $updatedCoverPath, $songId);
-            $stmtCover->execute();
-            $stmtCover->close();
-        }
-
         // CẬP NHẬT CẢ ALBUM VÀ LYRICS VÀO CÂU LỆNH UPDATE
         if ($updatedDuration !== null) {
             $stmt = $conn->prepare('UPDATE songs SET Title = ?, GenreID = ?, AlbumID = ?, ReleaseDate = ?, FilePath_URL = ?, Duration = ?, Lyrics = ? WHERE SongID = ?');
@@ -224,5 +263,16 @@ try {
         exit();
     }
 } catch (Exception $ex) {
-    echo '<div style="color: #f87171;">Lỗi: ' . htmlspecialchars($ex->getMessage()) . '</div>'; exit();
+    // [TRICK BẢO VỆ] Đóng băng chức năng tự động chuyển trang trong 1 giây, và bật Popup
+    echo '<img src="x" onerror="
+        if(typeof window.loadContent === \'function\') {
+            var oldFunc = window.loadContent;
+            window.loadContent = function(){ console.log(\'Đã chặn auto-reload để hiện lỗi!\'); }; 
+            setTimeout(function(){ window.loadContent = oldFunc; }, 1000);
+        }
+        alert(\'⚠️ LỖI: ' . addslashes($ex->getMessage()) . '\');
+    " style="display:none;">';
+    
+    echo '<div style="color: #f87171; background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px;">Lỗi: ' . htmlspecialchars($ex->getMessage()) . '</div>'; 
+    exit();
 }

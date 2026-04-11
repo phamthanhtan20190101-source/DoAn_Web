@@ -6,7 +6,7 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $
 }
 ?>
 <h2>Thêm Thể Loại Mới</h2>
-<form action="category_action.php" method="POST" data-ajax="true" data-reload-url="admin_genres.php">
+<form action="category_action.php" method="POST" data-ajax="true">
     <input type="hidden" name="action" value="create">
     <input type="hidden" name="type" value="genre">
     

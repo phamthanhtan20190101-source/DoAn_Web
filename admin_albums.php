@@ -19,7 +19,7 @@ $result = $conn->query("SELECT * FROM albums ORDER BY AlbumID DESC");
     <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-color: rgba(255,255,255,0.2); color: white; text-align: left;">
         <thead>
             <tr>
-                <th>ID</th>
+                <th style="width: 50px; text-align: center;">STT</th>
                 <th>Ảnh Bìa</th>
                 <th>Tên Album</th>
                 <th>Năm Phát Hành</th>
@@ -28,9 +28,10 @@ $result = $conn->query("SELECT * FROM albums ORDER BY AlbumID DESC");
         </thead>
         <tbody>
             <?php if ($result && $result->num_rows > 0): ?>
+                <?php $stt = 1; ?>
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
-                        <td><?php echo $row['AlbumID']; ?></td>
+                        <td style="text-align: center; font-weight: bold;"><?php echo $stt++; ?></td>
                         <td>
                             <?php if(!empty($row['CoverImage_URL'])): ?>
                                 <img src="<?php echo htmlspecialchars($row['CoverImage_URL'], ENT_QUOTES, 'UTF-8'); ?>" width="50" height="50" style="border-radius:5px; object-fit: cover;">

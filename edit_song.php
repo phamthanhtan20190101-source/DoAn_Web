@@ -41,7 +41,60 @@ $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['Artist
 ?>
 
 <h2>Sửa bài hát</h2>
+<style>
+    /* ÉP KIỂU GIAO DIỆN DARK MODE CHO SELECT2 (CA SĨ & THỂ LOẠI) */
+    .select2-container--default .select2-selection--single,
+    .select2-container--default .select2-selection--multiple {
+        background-color: rgba(0, 0, 0, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 5px !important;
+        min-height: 42px !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: white !important;
+        line-height: 40px !important;
+    }
+    .select2-search__field { color: white !important; }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+    }
+    
+    .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: var(--purple-primary, #9b4de0) !important;
+        border: none !important;
+        color: white !important;
+        margin-top: 6px !important;
+        padding: 3px 8px !important;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: white !important;
+        margin-right: 8px !important;
+    }
 
+    .select2-dropdown {
+        background-color: #231b2e !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--purple-primary, #9b4de0) !important;
+    }
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Đổi icon Lịch sang màu trắng trên trình duyệt */
+    input[type="date"] {
+        color-scheme: dark;
+    }
+    
+    /* Làm sáng chữ gợi ý của Lời bài hát */
+    textarea::placeholder, input::placeholder {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+</style>
 <form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true">
     <input type="hidden" name="action" value="update">
     <input type="hidden" name="song_id" value="<?php echo $song['SongID']; ?>">

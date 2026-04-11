@@ -1,21 +1,34 @@
 <?php
 session_start();
+include_once 'render_helper.php'; // Gọi hàm vẽ bài hát chuẩn Zing MP3
 
 $conn = new mysqli("localhost", "root", "vertrigo", "song_management");
 $conn->set_charset('utf8mb4');
 
 // Lấy từ khóa từ ô tìm kiếm truyền sang
 $keyword = isset($_GET['q']) ? trim($_GET['q']) : '';
+if ($keyword === '') { 
+    echo '<div style="color:white; padding: 20px;">Vui lòng nhập từ khóa tìm kiếm.</div>'; 
+    exit; 
+}
 $searchParam = "%{$keyword}%";
 
-// ĐÃ SỬA LỖI Ở ĐÂY: Thêm HAVING để nó thực sự lọc theo Tên bài hát hoặc Tên nhóm ca sĩ
-$sql = "SELECT s.SongID, s.Title, s.Duration, s.FilePath_URL, s.CoverImage_URL, GROUP_CONCAT(a.Name SEPARATOR ', ') AS ArtistName 
+// 1. TÌM KIẾM NGHỆ SĨ (Để hiển thị khung Card trên cùng)
+$stmtArtist = $conn->prepare("SELECT * FROM artists WHERE Name LIKE ? LIMIT 1");
+$stmtArtist->bind_param("s", $searchParam);
+$stmtArtist->execute();
+$artistMatch = $stmtArtist->get_result()->fetch_assoc();
+$stmtArtist->close();
+
+// 2. TÌM KIẾM BÀI HÁT (Giữ nguyên logic SQL chuẩn của bạn)
+// Lưu ý: Mình đổi SELECT s.* để hàm renderSongItem lấy được đủ thông tin (ảnh, duration,...)
+$sql = "SELECT s.*, GROUP_CONCAT(a.Name SEPARATOR ', ') AS ArtistName, GROUP_CONCAT(a.Name SEPARATOR ', ') AS Artists 
         FROM songs s
         LEFT JOIN song_artist sa ON s.SongID = sa.SongID
         LEFT JOIN artists a ON sa.ArtistID = a.ArtistID
         GROUP BY s.SongID
         HAVING s.Title LIKE ? OR ArtistName LIKE ?
-        ORDER BY s.SongID DESC";
+        ORDER BY s.PlayCount DESC, s.SongID DESC";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ss", $searchParam, $searchParam);
@@ -26,63 +39,47 @@ $songsJSON = [];
 $index = 0;      
 ?>
 
-<style>
-    .song-list-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
-    .song-item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; transition: 0.3s; }
-    .song-item-row:hover { background: rgba(255, 255, 255, 0.1); }
-    .song-info-left { display: flex; align-items: center; gap: 15px; flex: 1; }
-    .song-cover-mock { width: 45px; height: 45px; background: linear-gradient(135deg, #9b4de0, #ffbaba); border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 20px; flex-shrink: 0;}
-    .song-cover-img { width: 45px; height: 45px; border-radius: 5px; object-fit: cover; flex-shrink: 0; }
-    .song-details h4 { margin: 0; font-size: 15px; color: white; font-weight: 600; }
-    .song-details p { margin: 4px 0 0 0; font-size: 12px; color: rgba(255,255,255,0.5); }
-    .song-duration { color: rgba(255,255,255,0.5); font-size: 13px; width: 60px; text-align: center; }
-    .btn-play-action { background: transparent; border: 1px solid white; color: white; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .btn-play-action:hover { background: var(--purple-primary); border-color: var(--purple-primary); }
-</style>
+<div style="color: white; padding-top: 10px;">
+    <h2 style="font-size: 24px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 25px;">
+        Kết quả tìm kiếm cho: "<span style="color: var(--purple-primary);"><?php echo htmlspecialchars($keyword); ?></span>"
+    </h2>
 
-<div class="song-list-container">
-    <?php if ($result && $result->num_rows > 0): ?>
-        <?php while ($row = $result->fetch_assoc()): ?>
-            <?php 
-            $songsJSON[] = [
-                'url' => htmlspecialchars($row['FilePath_URL'], ENT_QUOTES, 'UTF-8'),
-                'title' => htmlspecialchars($row['Title'], ENT_QUOTES, 'UTF-8'),
-                'artist' => htmlspecialchars($row['ArtistName'] ?? 'Không rõ', ENT_QUOTES, 'UTF-8'),
-                'cover' => htmlspecialchars($row['CoverImage_URL'] ?? '', ENT_QUOTES, 'UTF-8')
-            ];
-            ?>
-            <div class="song-item-row">
-                <div class="song-info-left">
-                    <?php if (!empty($row['CoverImage_URL'])): ?>
-                        <img src="<?php echo htmlspecialchars($row['CoverImage_URL'], ENT_QUOTES, 'UTF-8'); ?>" class="song-cover-img" alt="Cover">
-                    <?php else: ?>
-                        <div class="song-cover-mock"><i class="fa-solid fa-music"></i></div>
-                    <?php endif; ?>
-                    
-                    <div class="song-details">
-                        <h4><?php echo htmlspecialchars($row['Title'], ENT_QUOTES, 'UTF-8'); ?></h4>
-                        <p><?php echo htmlspecialchars($row['ArtistName'] ?? 'Không rõ', ENT_QUOTES, 'UTF-8'); ?></p>
-                    </div>
-                </div>
-                
-                <div class="song-duration">
-                    <?php echo $row['Duration'] ? gmdate('i:s', intval($row['Duration'])) : '--:--'; ?>
-                </div>
-                
-                <div class="song-actions-right">
-                    <button class="btn-play-action" onclick="playPlaylist(<?php echo $index; ?>)">
-                        <i class="fa-solid fa-play"></i> Phát
-                    </button>
-                </div>
+    <?php if ($artistMatch): ?>
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 15px;">Nghệ sĩ quan tâm</h3>
+        <div onclick="loadContent('artist_view.php?id=<?php echo $artistMatch['ArtistID']; ?>')" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; display: inline-flex; align-items: center; gap: 20px; cursor: pointer; transition: 0.2s; margin-bottom: 30px;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+            <img src="<?php echo htmlspecialchars($artistMatch['Image_URL'] ?: 'https://via.placeholder.com/100'); ?>" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+            <div>
+                <div style="font-size: 20px; font-weight: bold; margin-bottom: 5px;"><?php echo htmlspecialchars($artistMatch['Name']); ?></div>
+                <div style="font-size: 13px; color: var(--text-secondary);"><i class="fa-solid fa-user"></i> Nghệ sĩ</div>
             </div>
-            <?php $index++; ?>
-        <?php endwhile; ?>
+            <i class="fa-solid fa-chevron-right" style="margin-left: 30px; color: var(--text-secondary);"></i>
+        </div>
+    <?php endif; ?>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 15px;">Bài Hát</h3>
+    <?php if ($result && $result->num_rows > 0): ?>
+        <div class="song-list-container" style="display: flex; flex-direction: column; gap: 5px;">
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <?php 
+                $songsJSON[] = [
+                    'id' => $row['SongID'],
+                    'url' => htmlspecialchars($row['FilePath_URL'], ENT_QUOTES, 'UTF-8'),
+                    'title' => htmlspecialchars($row['Title'], ENT_QUOTES, 'UTF-8'),
+                    'artist' => htmlspecialchars($row['ArtistName'] ?? 'Không rõ', ENT_QUOTES, 'UTF-8'),
+                    'cover' => htmlspecialchars($row['CoverImage_URL'] ?? '', ENT_QUOTES, 'UTF-8')
+                ];
+                ?>
+                <div class="song-item-wrapper" onclick="playPlaylist(<?php echo $index++; ?>, 'data-search-view')">
+                    <?php renderSongItem($row); ?>
+                </div>
+            <?php endwhile; ?>
+        </div>
     <?php else: ?>
-        <p style="color: rgba(255,255,255,0.5); padding: 20px 0;">Không tìm thấy bài hát hoặc ca sĩ nào phù hợp với "<?php echo htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8'); ?>"</p>
+        <p style="color: rgba(255,255,255,0.5); padding: 20px 0;">Không tìm thấy bài hát nào phù hợp với "<?php echo htmlspecialchars($keyword, ENT_QUOTES, 'UTF-8'); ?>"</p>
     <?php endif; ?>
 </div>
 
-<div id="current-playlist-data" style="display: none;" data-playlist='<?php echo htmlspecialchars(json_encode($songsJSON), ENT_QUOTES, "UTF-8"); ?>'></div>
+<div id="data-search-view" style="display: none;" data-playlist='<?php echo htmlspecialchars(json_encode($songsJSON), ENT_QUOTES, "UTF-8"); ?>'></div>
 
 <?php 
 $stmt->close();

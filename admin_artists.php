@@ -19,7 +19,7 @@ $result = $conn->query("SELECT * FROM artists ORDER BY ArtistID DESC");
     <table border="1" cellpadding="8" cellspacing="0" style="width:100%; border-color: rgba(255,255,255,0.2); color: white; text-align: left;">
         <thead>
             <tr>
-                <th>ID</th>
+                <th style="width: 50px; text-align: center;">STT</th>
                 <th style="width: 60px; text-align: center;">Ảnh</th>
                 <th>Tên Nghệ Sĩ</th>
                 <th>Quốc Gia</th>
@@ -29,9 +29,10 @@ $result = $conn->query("SELECT * FROM artists ORDER BY ArtistID DESC");
         </thead>
         <tbody>
             <?php if ($result && $result->num_rows > 0): ?>
+                <?php $stt = 1; ?>
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
-                        <td><?php echo $row['ArtistID']; ?></td>
+                        <td style="text-align: center; font-weight: bold;"><?php echo $stt++; ?></td>
                         
                         <td style="text-align: center;">
                             <?php if(!empty($row['Image_URL'])): ?>

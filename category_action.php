@@ -106,26 +106,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $successMessage = "Đã lưu thành công!";
 
-        // --- A. XỬ LÝ THỂ LOẠI ---
+
+        // --- A. XỬ LÝ THỂ LOẠI (GENRES) ---
         if ($type === 'genre') {
             $name = getPostVal('name');
             if (empty($name)) throw new Exception("Tên thể loại không được để trống.");
 
+            // [RÀNG BUỘC] Kiểm tra trùng lặp: Nếu thêm mới thì ko đc trùng tên, nếu sửa thì ko đc trùng tên với THẰNG KHÁC
             $id = ($action === 'update') ? intval(getPostVal('id')) : 0;
             $check = $conn->prepare("SELECT GenreID FROM genres WHERE Name = ? AND GenreID != ?");
             $check->bind_param("si", $name, $id);
-            $check->execute(); $check->store_result();
-            if ($check->num_rows > 0) throw new Exception("Thể loại '$name' đã tồn tại.");
+            $check->execute();
+            if ($check->get_result()->num_rows > 0) {
+                throw new Exception("Thể loại '$name' đã tồn tại trong hệ thống. Vui lòng nhập tên khác!");
+            }
             $check->close();
 
             if ($action === 'create') {
                 $stmt = $conn->prepare("INSERT INTO genres (Name) VALUES (?)");
-                $stmt->bind_param("s", $name); $stmt->execute();
-            } else {
+                $stmt->bind_param("s", $name);
+                $stmt->execute();
+                $successMessage = "Thêm thể loại '$name' thành công!";
+            } 
+            elseif ($action === 'update') {
                 $stmt = $conn->prepare("UPDATE genres SET Name = ? WHERE GenreID = ?");
-                $stmt->bind_param("si", $name, $id); $stmt->execute();
+                $stmt->bind_param("si", $name, $id);
+                $stmt->execute();
+                $successMessage = "Cập nhật thành công thể loại!";
             }
-            $successMessage = ($action === 'create') ? "Thêm thể loại thành công!" : "Cập nhật thành công!";
         }
         
         // --- B. XỬ LÝ NGHỆ SĨ ---
@@ -202,20 +210,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // --- D. XỬ LÝ BANNER ---
         elseif ($type === 'banner') {
-            $title = getPostVal('title'); $link = getPostVal('link_url');
+            $title = getPostVal('title'); 
+            $link = getPostVal('link_url');
+            $isActive = isset($_POST['is_active']) ? intval($_POST['is_active']) : 1; // Mặc định là hiện
+            $id = ($action === 'update') ? intval(getPostVal('id')) : 0;
+            
+            // [Ràng buộc 1] Tiêu đề không được để trống
             if (empty($title)) throw new Exception("Tiêu đề banner không được để trống.");
 
+            $imgUrl = null;
             if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = __DIR__ . '/uploads/banners';
                 if (!is_dir($uploadDir)) @mkdir($uploadDir, 0755, true);
+                
+                // [Ràng buộc 2] Chỉ chấp nhận file ảnh
+                $fileExt = strtolower(pathinfo($_FILES['banner_image']['name'], PATHINFO_EXTENSION));
+                if (!in_array($fileExt, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                    throw new Exception("Chỉ hỗ trợ tải lên file ảnh định dạng JPG, PNG, GIF, WEBP.");
+                }
+
                 $fileName = uniqid('banner_') . '_' . basename($_FILES['banner_image']['name']);
                 if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $uploadDir . '/' . $fileName)) {
                     $imgUrl = 'uploads/banners/' . $fileName;
-                    $stmt = $conn->prepare("INSERT INTO banners (Title, ImageURL, LinkURL) VALUES (?, ?, ?)");
-                    $stmt->bind_param("sss", $title, $imgUrl, $link); $stmt->execute();
                 }
-            } else { throw new Exception("Vui lòng chọn ảnh cho banner."); }
-            $successMessage = "Đã tải lên banner thành công!";
+            }
+
+            if ($action === 'create') {
+                // [Ràng buộc 3] Bắt buộc có ảnh khi tạo mới
+                if (!$imgUrl) throw new Exception("Vui lòng chọn ảnh cho banner mới.");
+                
+                $stmt = $conn->prepare("INSERT INTO banners (Title, ImageURL, LinkURL, IsActive) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("sssi", $title, $imgUrl, $link, $isActive); 
+                $stmt->execute();
+                $successMessage = "Đã thêm banner quảng cáo thành công!";
+            } 
+            elseif ($action === 'update') {
+                if ($imgUrl !== null) {
+                    // Nếu có up ảnh mới -> Xóa ảnh cũ trên server cho nhẹ máy
+                    $stmtImg = $conn->prepare("SELECT ImageURL FROM banners WHERE BannerID = ?");
+                    $stmtImg->bind_param('i', $id); $stmtImg->execute(); $stmtImg->bind_result($oldPath);
+                    if ($stmtImg->fetch() && !empty($oldPath)) {
+                        $realPath = __DIR__ . '/' . ltrim($oldPath, '/');
+                        if (file_exists($realPath)) @unlink($realPath);
+                    }
+                    $stmtImg->close();
+
+                    $stmt = $conn->prepare("UPDATE banners SET Title = ?, ImageURL = ?, LinkURL = ?, IsActive = ? WHERE BannerID = ?");
+                    $stmt->bind_param("sssii", $title, $imgUrl, $link, $isActive, $id);
+                } else {
+                    // Nếu không up ảnh mới -> Chỉ cập nhật chữ và trạng thái
+                    $stmt = $conn->prepare("UPDATE banners SET Title = ?, LinkURL = ?, IsActive = ? WHERE BannerID = ?");
+                    $stmt->bind_param("ssii", $title, $link, $isActive, $id);
+                }
+                $stmt->execute();
+                $successMessage = "Đã cập nhật banner thành công!";
+            }
         }
 
         // --- NẾU THÀNH CÔNG (Không bị lỗi) ---

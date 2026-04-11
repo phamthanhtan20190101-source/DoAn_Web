@@ -17,7 +17,7 @@ $result = $conn->query("SELECT AccountID, Username, Role, Status FROM account OR
     <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-color: rgba(255,255,255,0.2); color: white; text-align: left;">
         <thead style="background: rgba(255,255,255,0.05);">
             <tr>
-                <th>ID</th>
+                <th style="width: 50px; text-align: center;">STT</th>
                 <th>Tên đăng nhập</th>
                 <th>Vai trò (Role)</th>
                 <th>Trạng thái</th>
@@ -26,9 +26,10 @@ $result = $conn->query("SELECT AccountID, Username, Role, Status FROM account OR
         </thead>
         <tbody>
             <?php if ($result && $result->num_rows > 0): ?>
+                <?php $stt = 1; ?>
                 <?php while ($row = $result->fetch_assoc()): ?>
                     <tr>
-                        <td><?php echo $row['AccountID']; ?></td>
+                        <td style="text-align: center; font-weight: bold;"><?php echo $stt++; ?></td>
                         <td style="font-weight: 600;"><?php echo htmlspecialchars($row['Username']); ?></td>
                         <td>
                             <?php if($row['Role'] === 'admin'): ?>

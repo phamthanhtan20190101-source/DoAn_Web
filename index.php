@@ -60,6 +60,27 @@
             text-transform: uppercase;
         }
 
+        /* ================= CSS NÚT TẠO PLAYLIST SIDEBAR ================= */
+        .btn-create-playlist-sidebar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 15px 25px;
+            cursor: pointer;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            transition: color 0.2s;
+            margin-top: 10px;
+        }
+        .btn-create-playlist-sidebar:hover {
+            color: var(--purple-primary);
+        }
+        .btn-create-playlist-sidebar i {
+            font-size: 18px;
+        }
+
         .login-card { background-color: var(--purple-primary); border-radius: 8px; padding: 15px; margin: 10px 20px 20px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .login-card p { color: white; font-size: 12px; font-weight: 600; line-height: 1.6; }
         .btn-login { background: transparent; border: 1px solid white; color: white; border-radius: 20px; padding: 6px 20px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
@@ -136,13 +157,37 @@
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: var(--bg-sidebar); border-radius: 10px; padding: 30px; width: 400px; text-align: center; }
-        .modal-content input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 5px; background: rgba(255,255,255,0.1); color: white; }
+        .modal-content input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid var(--border-color); border-radius: 5px; background: rgba(255,255,255,0.1); color: white; outline: none; }
         .modal-content button { width: 100%; padding: 10px; background: var(--purple-primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 700; }
         .welcome-box { position: fixed; top: 20px; right: 20px; background: rgba(32, 28, 45, 0.95); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 18px; color: white; box-shadow: 0 14px 40px rgba(0,0,0,0.25); opacity: 0; transform: translateY(-10px); transition: 0.4s ease; z-index: 1100; pointer-events: none; }
         .welcome-box.show { opacity: 1; transform: translateY(0); }
         .avatar-dropdown { position: absolute; top: 80px; right: 40px; width: 240px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 18px; display: none; z-index: 1100; }
         .avatar-dropdown.show { display: block; }
         .avatar-dropdown .logout-btn { width: 100%; padding: 10px 0; background: #6f55ff; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; margin-top: 10px; }
+
+        /* HIỆU ỨNG SÓNG NHẠC KHI PLAY (CẬP NHẬT MỚI) */
+        @keyframes bounce {
+            0% { height: 3px; }
+            100% { height: 14px; }
+        }
+        /* Đang phát: Đổi màu chữ */
+        .song-item.is-playing { background-color: rgba(255, 255, 255, 0.05); }
+        .song-item.is-playing .song-title { color: var(--purple-primary) !important; }
+
+        /* Đang phát: Ép hiện lớp phủ đen trên ảnh bìa */
+        .song-item.is-playing .cover-overlay { opacity: 1 !important; }
+
+        /* Đang phát: Ẩn nút Play, Hiện sóng nhạc */
+        .song-item.is-playing .overlay-icon-play-small { display: none; }
+        .song-item.is-playing .playing-icon { display: flex !important; }
+
+        /* TRẠNG THÁI TẠM DỪNG (PAUSED): Dừng cứng cột sóng */
+        .song-item.is-paused .playing-icon span { animation-play-state: paused !important; }
+
+        /* Hover vào ảnh khi đang Tạm dừng: Ẩn sóng đi, hiện lại nút Play để bấm tiếp */
+        .song-item.is-paused:hover .playing-icon { display: none !important; }
+        .song-item.is-paused:hover .overlay-icon-play-small { display: block; }
+    
     </style>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -208,6 +253,11 @@
                         <li class="menu-item" onclick="loadContent('topic_genre.php')"><i class="fa-solid fa-icons"></i> Chủ Đề & Thể Loại</li>
                         <li class="menu-item"><i class="fa-regular fa-star"></i> Top 100</li>
                     </ul>
+                    
+                    <div class="btn-create-playlist-sidebar" onclick="checkAndCreatePlaylist()">
+                        <i class="fa-solid fa-plus"></i> Tạo playlist mới
+                    </div>
+
                     <?php if (!isset($_SESSION['username'])): ?>
                     <div class="login-card">
                         <p>Đăng nhập để khám phá playlist dành riêng cho bạn</p>
@@ -311,7 +361,60 @@
         </div>
     </div>
 
+    <div id="globalCreatePlModal" class="modal-overlay" style="z-index: 2500;">
+        <div class="modal-content" style="width: 350px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;">
+            <h3 style="color: white; margin-bottom: 20px;">Tạo playlist mới</h3>
+            <input type="text" id="globalPlTitle" placeholder="Nhập tên playlist..." style="width: 100%; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; margin-bottom: 20px; outline: none; text-align: center; font-size: 14px;">
+            <div style="display: flex; justify-content: space-between; gap: 10px;">
+                <button onclick="document.getElementById('globalCreatePlModal').style.display='none'" style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: 600;">Hủy</button>
+                <button onclick="submitGlobalCreatePlaylist()" style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: var(--purple-primary); color: white; cursor: pointer; font-weight: 600;">TẠO MỚI</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- LOGIC TẠO PLAYLIST TỪ SIDEBAR ---
+        function checkAndCreatePlaylist() {
+            if (!isLoggedIn) {
+                openLoginModal();
+            } else {
+                document.getElementById('globalCreatePlModal').style.display = 'flex';
+                document.getElementById('globalPlTitle').focus();
+            }
+        }
+
+        function submitGlobalCreatePlaylist() {
+            const title = document.getElementById('globalPlTitle').value.trim();
+            if(!title) { showGlobalNotify('Vui lòng nhập tên playlist!', false); return; }
+
+            fetch('user_action.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=create_playlist&title=' + encodeURIComponent(title)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    document.getElementById('globalCreatePlModal').style.display = 'none';
+                    document.getElementById('globalPlTitle').value = '';
+                    
+                    showGlobalNotify('Đã tạo playlist thành công!', true);
+                    
+                    // Tự động load lại trang thư viện và active menu
+                    loadContent('library.php');
+                    document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                    const libItem = Array.from(document.querySelectorAll('.menu-item')).find(el => el.textContent.includes('Thư Viện'));
+                    if(libItem) libItem.classList.add('active');
+                } else {
+                    showGlobalNotify(data.message || 'Có lỗi xảy ra!', false);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showGlobalNotify('Lỗi kết nối máy chủ!', false);
+            });
+        }
+
         // --- LOGIC XỬ LÝ THÊM VÀO PLAYLIST ---
         let currentSongIdToAdd = 0;
 

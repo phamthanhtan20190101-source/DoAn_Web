@@ -74,11 +74,26 @@ function formatTime(seconds) {
 
 function togglePlayPause() {
     if (!currentAudio) return; 
+    
+    // Tìm dòng bài hát đang được phát
+    const activeRow = document.getElementById('song-row-' + playlist[currentIndex].id);
+
     if (currentAudio.paused) {
         currentAudio.play();
+        
+        if (activeRow) {
+            activeRow.classList.add('is-playing');
+            activeRow.classList.remove('is-paused'); // Bỏ trạng thái pause đi
+        }
+        
         if (playBtn) playBtn.classList.replace('fa-circle-play', 'fa-circle-pause');
     } else {
         currentAudio.pause();
+        
+        if (activeRow) {
+            activeRow.classList.add('is-paused'); // Gắn trạng thái pause vào để CSS dừng sóng
+        }
+        
         if (playBtn) playBtn.classList.replace('fa-circle-pause', 'fa-circle-play');
     }
 }
@@ -111,7 +126,15 @@ function loadAndPlaySong() {
     let titleEl = document.querySelector('.player .song-title');
     let artistEl = document.querySelector('.player .song-artist');
     if (titleEl) titleEl.textContent = song.title;
-    if (artistEl) artistEl.textContent = song.artist;
+    if (artistEl) {
+        // Biến tên ca sĩ thành thẻ link có thể click và đổi màu khi hover
+        artistEl.innerHTML = `<span style="cursor: pointer; transition: 0.2s;" 
+                                    onmouseover="this.style.textDecoration='underline'; this.style.color='var(--purple-primary)'" 
+                                    onmouseout="this.style.textDecoration='none'; this.style.color='var(--text-secondary)'" 
+                                    onclick="loadContent('search_results.php?q=${encodeURIComponent(song.artist)}')">
+                                ${song.artist}
+                              </span>`;
+    }
     
     const thumb = document.querySelector('.player .song-thumb');
     if (thumb) {
@@ -185,6 +208,13 @@ function loadAndPlaySong() {
 
     currentAudio.play().catch(e => console.error("Lỗi phát audio:", e));
     if (playBtn) playBtn.classList.replace('fa-circle-play', 'fa-circle-pause');
+
+    // Bật sóng nhạc cho dòng bài hát tương ứng
+    document.querySelectorAll('.song-item').forEach(el => el.classList.remove('is-playing', 'is-paused'));
+    if (playlist.length > 0 && playlist[currentIndex]) {
+        const activeRow = document.getElementById('song-row-' + playlist[currentIndex].id);
+        if (activeRow) activeRow.classList.add('is-playing');
+    }
 }
 
 function nextSong() {
@@ -391,4 +421,71 @@ setInterval(() => {
             newEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
+    
 }, 100);
+// ====================================================================
+// HÀM PHÁT NHẠC TỪ PLAYLIST (Được gọi từ nút bấm trên giao diện)
+// ====================================================================
+window.playPlaylist = function(index, source = null) {
+    // 1. Tìm thẻ <div> tàng hình chứa dữ liệu bài hát mà mình đã gài vào HTML
+    const dataBox = document.getElementById('current-playlist-data');
+    if (!dataBox) {
+        console.error("⚠️ Không tìm thấy kho dữ liệu bài hát (#current-playlist-data)!");
+        return;
+    }
+
+    try {
+        // 2. Lấy cục dữ liệu chữ (JSON) và biến nó thành mảng (Array)
+        const jsonData = dataBox.getAttribute('data-playlist');
+        if (jsonData) {
+            // Cập nhật lại mảng playlist và vị trí bài hát hiện tại của hệ thống
+            playlist = JSON.parse(jsonData);
+            currentIndex = index;
+
+            // 3. Gọi hàm tải bài hát lên trình phát
+            // (Hầu hết các file player.js đều dùng hàm loadSong, nếu file của bạn dùng tên khác thì báo mình nhé)
+            if (typeof loadSong === 'function') {
+                loadSong(currentIndex);
+                
+                // Ép trình duyệt phát nhạc ngay lập tức
+                if (currentAudio) {
+                    currentAudio.play().then(() => {
+                        // Đổi icon nút Play ở thanh Player thành Pause
+                        if (playBtn) {
+                            playBtn.classList.remove('fa-circle-play', 'fa-play');
+                            playBtn.classList.add('fa-circle-pause');
+                        }
+                    }).catch(err => {
+                        console.error("⚠️ Trình duyệt chặn tự động phát nhạc:", err);
+                    });
+                }
+            } else {
+                console.error("⚠️ Lỗi: Không tìm thấy hàm loadSong() trong player.js");
+            }
+        }
+    } catch (error) {
+        console.error("⚠️ Lỗi phân tích dữ liệu bài hát:", error);
+    }
+};// Bắt đầu phát danh sách (Hỗ trợ 100% cho mọi loại Tab)
+window.playPlaylist = function(index, dataId = 'current-playlist-data') {
+    // Tìm kho dữ liệu bài hát
+    let dataEl = document.getElementById(dataId);
+    
+    // TRICK: Nếu tìm không ra, tự động fallback về kho dữ liệu mặc định
+    if (!dataEl) {
+        dataEl = document.getElementById('current-playlist-data');
+    }
+
+    if (dataEl) {
+        window.currentPlaylistData = JSON.parse(dataEl.getAttribute('data-playlist'));
+    }
+
+    playlist = window.currentPlaylistData || []; 
+    if (playlist.length === 0) {
+        console.error("⚠️ Không có bài hát nào trong Playlist!");
+        return;
+    }
+    
+    currentIndex = index;
+    loadAndPlaySong();
+};
