@@ -1,6 +1,5 @@
 // =========================================================================
-// TRÌNH PHÁT NHẠC TOÀN DIỆN (Lyrx Audio Player)
-// Chứa tất cả: Phát/Dừng, Next/Prev, Shuffle, Repeat, Tua nhạc, Âm lượng
+// TRÌNH PHÁT NHẠC TOÀN DIỆN (Lyrx Audio Player) - VERSION PRO
 // =========================================================================
 
 let currentAudio = null;
@@ -8,97 +7,64 @@ let playlist = [];
 let currentIndex = 0;
 let isShuffle = false;
 let isRepeat = false;
+let hasCountedPlay = false;
 
-// Khai báo các biến giao diện
 let playBtn, progressBar, timeCurrent, timeTotal, progressContainer;
 let btnNext, btnPrev, btnShuffle, btnRepeat;
 let volumeContainer, currentVolume;
 
-// Đợi giao diện tải xong mới gắn sự kiện
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Ánh xạ các nút bấm trên giao diện HTML
+    // Tự động nhận diện nút bấm thông minh dù có thiếu class
     playBtn = document.querySelector('.btn-play');
     progressBar = document.querySelector('.current-progress');
-    timeCurrent = document.querySelector('.time-current');
-    timeTotal = document.querySelector('.time-total');
+    timeCurrent = document.querySelector('.time-current') || document.querySelector('.progress-container span:first-child');
+    timeTotal = document.querySelector('.time-total') || document.querySelector('.progress-container span:last-child');
     progressContainer = document.querySelector('.progress-bar');
     
-    btnNext = document.querySelector('.btn-next');
-    btnPrev = document.querySelector('.btn-prev');
-    btnShuffle = document.querySelector('.btn-shuffle');
-    btnRepeat = document.querySelector('.btn-repeat');
+    btnNext = document.querySelector('.btn-next') || document.querySelector('.fa-forward-step');
+    btnPrev = document.querySelector('.btn-prev') || document.querySelector('.fa-backward-step');
+    btnShuffle = document.querySelector('.btn-shuffle') || document.querySelector('.fa-shuffle');
+    btnRepeat = document.querySelector('.btn-repeat') || document.querySelector('.fa-repeat');
 
     volumeContainer = document.querySelector('.volume-bar');
-    currentVolume = document.querySelector('.current-volume');
+    currentVolume = document.querySelector('.current-volume') || (volumeContainer ? volumeContainer.querySelector('div') : null);
 
-    // 2. Gắn sự kiện BẬT / DỪNG (Play / Pause)
-    if (playBtn) {
-        playBtn.addEventListener('click', togglePlayPause);
-    }
+    if (playBtn) playBtn.addEventListener('click', togglePlayPause);
 
-    // 3. Gắn sự kiện TUA NHẠC (Click & Kéo thả mượt mà)
     if (progressContainer) {
         let isDraggingProgress = false;
-
         const updateProgress = (e) => {
             if (!currentAudio || isNaN(currentAudio.duration)) return;
             let rect = progressContainer.getBoundingClientRect();
-            let percent = (e.clientX - rect.left) / rect.width;
-            percent = Math.max(0, Math.min(1, percent)); // Giới hạn từ 0 đến 1
+            let percent = (Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
             currentAudio.currentTime = percent * currentAudio.duration;
-            progressBar.style.width = (percent * 100) + '%';
+            if (progressBar) progressBar.style.width = (percent * 100) + '%';
         };
-
-        progressContainer.addEventListener('mousedown', (e) => {
-            isDraggingProgress = true;
-            updateProgress(e);
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (isDraggingProgress) updateProgress(e);
-        });
-        document.addEventListener('mouseup', () => {
-            isDraggingProgress = false;
-        });
+        progressContainer.addEventListener('mousedown', (e) => { isDraggingProgress = true; updateProgress(e); });
+        document.addEventListener('mousemove', (e) => { if (isDraggingProgress) updateProgress(e); });
+        document.addEventListener('mouseup', () => { isDraggingProgress = false; });
     }
 
-    // 4. Gắn sự kiện CHỈNH ÂM LƯỢNG (Click & Kéo thả mượt mà)
     if (volumeContainer) {
         let isDraggingVolume = false;
-        
         const updateVolume = (e) => {
             if (!currentAudio) return;
             let rect = volumeContainer.getBoundingClientRect();
-            let percent = (e.clientX - rect.left) / rect.width;
-            percent = Math.max(0, Math.min(1, percent)); // Giới hạn từ 0 đến 1
+            let percent = (Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
             currentAudio.volume = percent;
             if (currentVolume) currentVolume.style.width = (percent * 100) + '%';
         };
-
-        volumeContainer.addEventListener('mousedown', (e) => {
-            isDraggingVolume = true;
-            updateVolume(e);
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (isDraggingVolume) updateVolume(e);
-        });
-        document.addEventListener('mouseup', () => {
-            isDraggingVolume = false;
-        });
+        volumeContainer.addEventListener('mousedown', (e) => { isDraggingVolume = true; updateVolume(e); });
+        document.addEventListener('mousemove', (e) => { if (isDraggingVolume) updateVolume(e); });
+        document.addEventListener('mouseup', () => { isDraggingVolume = false; });
     }
 
-    // 5. Gắn sự kiện NEXT, PREV, SHUFFLE, REPEAT
     if (btnNext) btnNext.addEventListener('click', nextSong);
     if (btnPrev) btnPrev.addEventListener('click', prevSong);
     if (btnShuffle) btnShuffle.addEventListener('click', toggleShuffle);
     if (btnRepeat) btnRepeat.addEventListener('click', toggleRepeat);
 });
 
-
-// ==========================================
-// CÁC HÀM XỬ LÝ CHÍNH
-// ==========================================
-
-// Hàm định dạng phút:giây (00:00)
 function formatTime(seconds) {
     if (isNaN(seconds)) return "00:00";
     const m = Math.floor(seconds / 60);
@@ -106,21 +72,20 @@ function formatTime(seconds) {
     return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
 
-// Hàm Phát / Dừng nhạc khi bấm nút Play ở thanh dưới đáy
 function togglePlayPause() {
     if (!currentAudio) return; 
     if (currentAudio.paused) {
         currentAudio.play();
-        playBtn.classList.replace('fa-circle-play', 'fa-circle-pause');
+        if (playBtn) playBtn.classList.replace('fa-circle-play', 'fa-circle-pause');
     } else {
         currentAudio.pause();
-        playBtn.classList.replace('fa-circle-pause', 'fa-circle-play');
+        if (playBtn) playBtn.classList.replace('fa-circle-pause', 'fa-circle-play');
     }
 }
 
-// Hàm BẮT ĐẦU CHẠY DANH SÁCH (Được gọi khi bấm nút "Phát" trong Thư viện)
-function playPlaylist(index) {
-    const dataEl = document.getElementById('current-playlist-data');
+// Bắt đầu phát danh sách (Hỗ trợ 100% cho mọi loại Tab)
+window.playPlaylist = function(index, dataId = 'current-playlist-data') {
+    const dataEl = document.getElementById(dataId);
     if (dataEl) {
         window.currentPlaylistData = JSON.parse(dataEl.getAttribute('data-playlist'));
     }
@@ -130,104 +95,173 @@ function playPlaylist(index) {
     
     currentIndex = index;
     loadAndPlaySong();
-}
+};
 
-// Hàm LÕI: Tải và phát bài hát theo currentIndex
 function loadAndPlaySong() {
     let song = playlist[currentIndex];
     if (!song) return;
 
-    // A. Cập nhật thông tin UI (Tên bài, Ca sĩ)
-    document.querySelector('.player .song-title').textContent = song.title;
-    document.querySelector('.player .song-artist').textContent = song.artist;
-    
-    // B. Cập nhật ảnh bìa góc trái dưới cùng (Kèm hiệu ứng nốt nhạc nếu không có ảnh)
-    const thumb = document.querySelector('.player .song-thumb');
-    if (song.cover && song.cover !== '') {
-        thumb.style.backgroundImage = `url(${song.cover})`;
-        thumb.style.backgroundSize = 'cover';
-        thumb.style.backgroundPosition = 'center';
-        thumb.innerHTML = ''; // Xóa nốt nhạc
-    } else {
-        thumb.style.backgroundImage = 'none';
-        thumb.style.background = 'linear-gradient(135deg, #9b4de0, #ffbaba)'; // Màu Gradient bắt mắt
-        thumb.style.display = 'flex';
-        thumb.style.justifyContent = 'center';
-        thumb.style.alignItems = 'center';
-        thumb.innerHTML = '<i class="fa-solid fa-music" style="color: white; font-size: 20px;"></i>';
+    hasCountedPlay = false;
+
+    // Lưu Lịch sử ngầm trên máy người dùng
+    if (typeof saveToHistory === 'function') {
+        saveToHistory({ url: song.url, title: song.title, artist: song.artist, cover: song.cover, id: song.id });
     }
 
-    // C. Tắt bài cũ nếu có
+    let titleEl = document.querySelector('.player .song-title');
+    let artistEl = document.querySelector('.player .song-artist');
+    if (titleEl) titleEl.textContent = song.title;
+    if (artistEl) artistEl.textContent = song.artist;
+    
+    const thumb = document.querySelector('.player .song-thumb');
+    if (thumb) {
+        if (song.cover && song.cover !== '') {
+            thumb.style.backgroundImage = `url(${song.cover})`;
+            thumb.style.backgroundSize = 'cover';
+            thumb.style.backgroundPosition = 'center';
+            thumb.innerHTML = ''; 
+        } else {
+            thumb.style.backgroundImage = 'none';
+            thumb.style.background = 'linear-gradient(135deg, #9b4de0, #ffbaba)'; 
+            thumb.style.display = 'flex';
+            thumb.style.justifyContent = 'center';
+            thumb.style.alignItems = 'center';
+            thumb.innerHTML = '<i class="fa-solid fa-music" style="color: white; font-size: 20px;"></i>';
+        }
+    }
+
     if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
     }
 
-    // D. Tạo luồng âm thanh mới
     currentAudio = new Audio(song.url);
     
-    // Khôi phục mức âm lượng hiện tại trên thanh UI
+    // Ghi lịch sử lên Server
+    if (song.id) {
+        fetch('user_action.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'action=log_history&song_id=' + song.id
+        }).catch(e => console.log("Lỗi ghi lịch sử: ", e));
+    }
+    
     if (currentVolume) {
         let volWidth = currentVolume.style.width || '50%';
         currentAudio.volume = parseFloat(volWidth) / 100;
     }
     
-    // E. Các sự kiện cập nhật thanh thời gian
     currentAudio.addEventListener('loadedmetadata', function() {
-        timeTotal.textContent = formatTime(currentAudio.duration);
+        if (timeTotal) timeTotal.textContent = formatTime(currentAudio.duration);
     });
 
     currentAudio.addEventListener('timeupdate', function() {
-        const percent = (currentAudio.currentTime / currentAudio.duration) * 100;
-        progressBar.style.width = percent + '%';
-        timeCurrent.textContent = formatTime(currentAudio.currentTime);
-    });
+    const percent = (currentAudio.currentTime / currentAudio.duration) * 100;
+    if (progressBar) progressBar.style.width = percent + '%';
+    if (timeCurrent) timeCurrent.textContent = formatTime(currentAudio.currentTime);
 
-    // F. Xử lý khi HÁT XONG BÀI
-    currentAudio.addEventListener('ended', function() {
-        if (isRepeat) {
-            currentAudio.currentTime = 0;
-            currentAudio.play();
-        } else {
-            nextSong();
+    // --- LOGIC: CỘNG VIEW KHI NGHE TRÊN 50% ---
+    if (!hasCountedPlay && currentAudio.duration > 0) {
+        // Kiểm tra nếu thời gian hiện tại >= một nửa tổng thời gian
+        if (currentAudio.currentTime >= (currentAudio.duration / 2)) {
+            hasCountedPlay = true; // Bật công tắc để không bị cộng nhiều lần
+
+            // Gọi xuống Server để báo cáo cộng 1 view
+            if (song.id) {
+                fetch('user_action.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'action=increment_playcount&song_id=' + song.id
+                }).catch(e => console.log("Lỗi cộng view: ", e));
+            }
         }
+    }
+});
+
+    currentAudio.addEventListener('ended', function() {
+        if (isRepeat) { currentAudio.currentTime = 0; currentAudio.play(); } 
+        else { nextSong(); }
     });
 
-    // Bắt đầu phát
-    currentAudio.play();
+    currentAudio.play().catch(e => console.error("Lỗi phát audio:", e));
     if (playBtn) playBtn.classList.replace('fa-circle-play', 'fa-circle-pause');
 }
 
-// Hàm: BÀI TIẾP THEO (Next)
 function nextSong() {
     if (playlist.length === 0) return;
-    if (isShuffle) {
-        currentIndex = Math.floor(Math.random() * playlist.length);
-    } else {
-        currentIndex = (currentIndex + 1) % playlist.length; 
-    }
+    if (isShuffle) currentIndex = Math.floor(Math.random() * playlist.length);
+    else currentIndex = (currentIndex + 1) % playlist.length; 
     loadAndPlaySong();
 }
 
-// Hàm: BÀI TRƯỚC ĐÓ (Prev)
 function prevSong() {
     if (playlist.length === 0) return;
-    if (isShuffle) {
-        currentIndex = Math.floor(Math.random() * playlist.length);
-    } else {
-        currentIndex = (currentIndex - 1 + playlist.length) % playlist.length; 
-    }
+    if (isShuffle) currentIndex = Math.floor(Math.random() * playlist.length);
+    else currentIndex = (currentIndex - 1 + playlist.length) % playlist.length; 
     loadAndPlaySong();
 }
 
-// Hàm: BẬT/TẮT TRỘN BÀI (Shuffle)
 function toggleShuffle() {
     isShuffle = !isShuffle;
     if (btnShuffle) btnShuffle.style.color = isShuffle ? 'var(--purple-primary)' : 'var(--text-primary)';
 }
 
-// Hàm: BẬT/TẮT LẶP LẠI 1 BÀI (Repeat)
 function toggleRepeat() {
     isRepeat = !isRepeat;
     if (btnRepeat) btnRepeat.style.color = isRepeat ? 'var(--purple-primary)' : 'var(--text-primary)';
 }
+
+// =========================================================================
+// TÍNH NĂNG LỊCH SỬ NGHE NHẠC BẰNG LOCALSTORAGE
+// =========================================================================
+const HISTORY_KEY = 'lyrx_history';
+const MAX_HISTORY_ITEMS = 20;
+
+window.saveToHistory = function(songObject) {
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+    history = history.filter(song => song.url !== songObject.url);
+    history.unshift(songObject);
+    if (history.length > MAX_HISTORY_ITEMS) history = history.slice(0, MAX_HISTORY_ITEMS);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+};
+
+window.renderHistory = function(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    let history = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+
+    if (history.length === 0) {
+        container.innerHTML = '<p style="color: gray; padding: 20px 0; text-align: center;">Bạn chưa nghe bài hát nào gần đây.</p>';
+        return;
+    }
+
+    let historyDataDiv = `<div id="data-local-history" style="display:none;" data-playlist='${JSON.stringify(history).replace(/'/g, "&apos;")}'></div>`;
+
+    let htmlString = history.map((song, index) => `
+        <div class="song-item-wrapper" onclick="playPlaylist(${index}, 'data-local-history')">
+            <div class="song-item">
+                <i class="fa-solid fa-music prefix-music-icon"></i>
+                <div class="song-cover-container">
+                    ${song.cover 
+                        ? `<img src="${song.cover}" class="song-cover">` 
+                        : `<div class="song-cover-placeholder"><i class="fa-solid fa-music"></i></div>`
+                    }
+                    <div class="cover-overlay"><i class="fa-solid fa-play overlay-icon-play-small"></i></div>
+                </div>
+                <div class="song-details">
+                    <div class="song-title">${song.title}</div>
+                    <div class="song-artist">${song.artist}</div>
+                </div>
+                <div class="song-action-icons">
+                    <div class="action-default"><span class="duration-text">--:--</span></div>
+                    <div class="action-hover">
+                        <i class="fa-solid fa-play action-sub-icon" style="color: var(--purple-primary);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = htmlString + historyDataDiv;
+};
