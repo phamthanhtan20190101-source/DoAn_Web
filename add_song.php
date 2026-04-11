@@ -23,11 +23,6 @@ $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name A
         </label>
 
         <label>
-            Ảnh bìa bài hát (Không bắt buộc)
-            <input type="file" name="cover_image" accept="image/*" style="margin-top: 5px; width: 100%;">
-        </label>
-
-        <label>
             File MP3 (.mp3)
             <input type="file" name="audio_file" accept="audio/mp3,audio/mpeg" required style="margin-top: 5px; width: 100%;">
         </label>
@@ -54,6 +49,11 @@ $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name A
         <label>
             Ngày phát hành
             <input type="date" name="release_date" max="<?php echo date('Y-m-d'); ?>" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white;">
+        </label>
+
+        <label>
+            Lời bài hát
+            <textarea name="lyrics" rows="8" placeholder="Dán lời bài hát vào đây..." style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; resize: vertical;"></textarea>
         </label>
 
         <div style="display: flex; gap: 10px;">

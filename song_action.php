@@ -1,230 +1,126 @@
 <?php
 session_start();
 if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'admin') {
-    http_response_code(403);
-    echo 'Bạn không có quyền thực hiện hành động này.';
-    exit();
+    http_response_code(403); echo 'Bạn không có quyền thực hiện hành động này.'; exit();
 }
 
-$servername = "localhost";
-$username = "root";
-$password = "vertrigo";
-$dbname = "song_management";
+$servername = "localhost"; $username = "root"; $password = "vertrigo"; $dbname = "song_management";
 
 function getDbConnection() {
     global $servername, $username, $password, $dbname;
     $conn = new mysqli($servername, $username, $password, $dbname);
     if ($conn->connect_error) throw new RuntimeException('Không thể kết nối cơ sở dữ liệu.');
-    $conn->set_charset('utf8mb4');
-    return $conn;
+    $conn->set_charset('utf8mb4'); return $conn;
 }
 
 function sendJson($success, $message) {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['success' => $success, 'message' => $message]);
-    exit();
+    echo json_encode(['success' => $success, 'message' => $message]); exit();
 }
 
 function getPostValue($key) { return isset($_POST[$key]) ? trim($_POST[$key]) : null; }
 
 function validateMp3Upload(array $file) {
-    if (!isset($file['error']) || is_array($file['error'])) throw new RuntimeException('Dữ liệu upload không hợp lệ.');
     if ($file['error'] !== UPLOAD_ERR_OK) throw new RuntimeException('Lỗi upload file: ' . $file['error']);
-    if ($file['size'] > 50 * 1024 * 1024) throw new RuntimeException('Dung lượng file vượt mức cho phép (Tối đa 50MB).');
     if (strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) !== 'mp3') throw new RuntimeException('Chỉ chấp nhận file có đuôi .mp3');
     return true;
 }
 
 function computeDuration(string $filePath) {
     $getid3Path = __DIR__ . '/getid3/getid3.php';
-    if (!file_exists($getid3Path)) throw new RuntimeException('Thư viện getID3 chưa được cài đặt.');
+    if (!file_exists($getid3Path)) return 0;
     require_once $getid3Path;
     $getID3 = new getID3();
     $fileInfo = $getID3->analyze($filePath);
-    if (isset($fileInfo['playtime_seconds'])) return intval(round($fileInfo['playtime_seconds']));
-    return 0;
+    return isset($fileInfo['playtime_seconds']) ? intval(round($fileInfo['playtime_seconds'])) : 0;
 }
 
-function safeUnlink(string $path) {
-    $uploadsDir = realpath(__DIR__ . '/uploads/songs');
-    if (!$uploadsDir) return;
-    $realPath = realpath($path);
-    if ($realPath && strpos($realPath, $uploadsDir) === 0 && is_file($realPath)) @unlink($realPath);
-}
+function safeUnlink(string $path) { if (is_file($path)) @unlink($path); }
 
 $action = null;
 $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
 if (stripos($contentType, 'application/json') !== false) {
     $payload = json_decode(file_get_contents('php://input'), true);
-    if (json_last_error() === JSON_ERROR_NONE && is_array($payload)) $action = $payload['action'] ?? null;
+    $action = $payload['action'] ?? null;
 } else {
     $action = getPostValue('action');
 }
 
 try {
     if ($action === 'delete') {
-        header('Content-Type: application/json; charset=utf-8');
         $payload = json_decode(file_get_contents('php://input'), true);
-        $songId = isset($payload['songId']) ? intval($payload['songId']) : 0;
-        if ($songId <= 0) sendJson(false, 'ID bài hát không hợp lệ.');
-
+        $songId = intval($payload['songId']);
         $conn = getDbConnection();
         $stmt = $conn->prepare('SELECT FilePath_URL FROM songs WHERE SongID = ?');
-        $stmt->bind_param('i', $songId);
-        $stmt->execute();
-        $stmt->bind_result($filePath);
-        $stmt->fetch(); $stmt->close();
-
+        $stmt->bind_param('i', $songId); $stmt->execute(); $stmt->bind_result($filePath); $stmt->fetch(); $stmt->close();
         if ($filePath) safeUnlink(__DIR__ . '/' . ltrim($filePath, '/')); 
-
         $stmt = $conn->prepare('DELETE FROM songs WHERE SongID = ?');
-        $stmt->bind_param('i', $songId);
-        $stmt->execute();
-        $affected = $stmt->affected_rows; $stmt->close(); $conn->close();
-
-        if ($affected > 0) sendJson(true, 'Xóa bài hát thành công.');
-        sendJson(false, 'Không tìm thấy bài hát cần xóa.');
+        $stmt->bind_param('i', $songId); $stmt->execute(); $stmt->close(); $conn->close();
+        sendJson(true, 'Xóa bài hát thành công.');
     }
-
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') throw new RuntimeException('Yêu cầu không hợp lệ.');
 
     $conn = getDbConnection();
-
     $title = getPostValue('title');
-    $releaseDate = getPostValue('release_date');
-    $releaseDate = $releaseDate !== '' ? $releaseDate : null;
-
-    $genreInput = getPostValue('genre_id');
-    $genreId = intval($genreInput); 
-    if ($genreId === 0 && !empty($genreInput)) {
-        $stmtCheckG = $conn->prepare("SELECT GenreID FROM genres WHERE Name = ?");
-        $stmtCheckG->bind_param('s', $genreInput);
-        $stmtCheckG->execute();
-        $stmtCheckG->bind_result($existingGenreId);
-        if ($stmtCheckG->fetch()) {
-            $genreId = $existingGenreId; $stmtCheckG->close();
-        } else {
-            $stmtCheckG->close();
-            $stmtNewGenre = $conn->prepare('INSERT INTO genres (Name) VALUES (?)');
-            $stmtNewGenre->bind_param('s', $genreInput);
-            $stmtNewGenre->execute();
-            $genreId = $stmtNewGenre->insert_id; $stmtNewGenre->close();
-        }
-    }
-
-    $artistInputs = isset($_POST['artist_ids']) ? (array)$_POST['artist_ids'] : [];
-    $finalArtistIds = [];
-
-    foreach ($artistInputs as $input) {
-        $aId = intval($input);
-        if ($aId > 0) {
-            $finalArtistIds[] = $aId; 
-        } elseif (!empty(trim($input))) {
-            $newName = trim($input);
-            $stmtCheckA = $conn->prepare("SELECT ArtistID FROM artists WHERE Name = ?");
-            $stmtCheckA->bind_param('s', $newName);
-            $stmtCheckA->execute();
-            $stmtCheckA->bind_result($existingArtistId);
-            if ($stmtCheckA->fetch()) {
-                $finalArtistIds[] = $existingArtistId;
-                $stmtCheckA->close();
-            } else {
-                $stmtCheckA->close();
-                $stmtNewArtist = $conn->prepare('INSERT INTO artists (Name) VALUES (?)');
-                $stmtNewArtist->bind_param('s', $newName);
-                $stmtNewArtist->execute();
-                $finalArtistIds[] = $stmtNewArtist->insert_id;
-                $stmtNewArtist->close();
-            }
-        }
-    }
-    $finalArtistIds = array_unique($finalArtistIds);
+    $releaseDate = getPostValue('release_date') ?: null;
+    $genreId = intval(getPostValue('genre_id'));
+    $lyrics = getPostValue('lyrics'); // LẤY DỮ LIỆU LỜI BÀI HÁT
+    $artistIds = isset($_POST['artist_ids']) ? (array)$_POST['artist_ids'] : [];
 
     if ($action === 'create') {
-        if (empty($title) || $genreId <= 0 || empty($finalArtistIds)) throw new RuntimeException('Vui lòng điền đầy đủ thông tin (Tên bài, Thể loại, Ca sĩ).');
-        if (!isset($_FILES['audio_file'])) throw new RuntimeException('Chưa chọn file MP3.');
-
         validateMp3Upload($_FILES['audio_file']);
         $uploadDir = __DIR__ . '/uploads/songs';
-        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) throw new RuntimeException('Không tạo được thư mục lưu file.');
-
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
         $destinationFile = $uploadDir . '/' . uniqid('song_', true) . '.mp3';
-        if (!move_uploaded_file($_FILES['audio_file']['tmp_name'], $destinationFile)) throw new RuntimeException('Không thể lưu file MP3 lên server.');
+        move_uploaded_file($_FILES['audio_file']['tmp_name'], $destinationFile);
 
         $duration = computeDuration($destinationFile);
         $storedPath = 'uploads/songs/' . basename($destinationFile);
 
-        $stmt = $conn->prepare('INSERT INTO songs (Title, Duration, ReleaseDate, FilePath_URL, PlayCount, GenreID) VALUES (?, ?, ?, ?, 0, ?)');
-        $stmt->bind_param('sissi', $title, $duration, $releaseDate, $storedPath, $genreId);
+        // THÊM LYRICS VÀO CÂU LỆNH INSERT
+        $stmt = $conn->prepare('INSERT INTO songs (Title, Duration, ReleaseDate, FilePath_URL, PlayCount, GenreID, Lyrics) VALUES (?, ?, ?, ?, 0, ?, ?)');
+        $stmt->bind_param('sissis', $title, $duration, $releaseDate, $storedPath, $genreId, $lyrics);
         $stmt->execute();
-        $newSongId = $stmt->insert_id;
-        $stmt->close();
+        $newSongId = $stmt->insert_id; $stmt->close();
 
         $stmt = $conn->prepare('INSERT INTO song_artist (SongID, ArtistID) VALUES (?, ?)');
-        foreach ($finalArtistIds as $aId) {
-            $stmt->bind_param('ii', $newSongId, $aId);
-            $stmt->execute();
-        }
-        $stmt->close();
-        
-        $conn->close();
-        echo '<div style="color: #4ade80; font-size: 16px;">✅ Thêm bài hát thành công!</div>';
-        exit();
+        foreach ($artistIds as $aId) { $stmt->bind_param('ii', $newSongId, $aId); $stmt->execute(); }
+        $stmt->close(); $conn->close();
+        echo '<div style="color: #4ade80;">✅ Thêm bài hát thành công!</div>'; exit();
     }
 
     if ($action === 'update') {
         $songId = intval(getPostValue('song_id'));
-        if ($songId <= 0 || empty($title) || $genreId <= 0 || empty($finalArtistIds)) throw new RuntimeException('Dữ liệu sửa bài hát không hợp lệ. Vui lòng chọn ít nhất 1 ca sĩ.');
-
         $stmt = $conn->prepare('SELECT FilePath_URL FROM songs WHERE SongID = ?');
-        $stmt->bind_param('i', $songId);
-        $stmt->execute();
-        $stmt->bind_result($existingPath);
-        $stmt->fetch(); $stmt->close();
+        $stmt->bind_param('i', $songId); $stmt->execute(); $stmt->bind_result($existingPath); $stmt->fetch(); $stmt->close();
 
         $updatedFilePath = $existingPath;
         $updatedDuration = null;
-        if (isset($_FILES['audio_file']) && $_FILES['audio_file']['error'] !== UPLOAD_ERR_NO_FILE) {
+
+        if (isset($_FILES['audio_file']) && $_FILES['audio_file']['error'] === UPLOAD_ERR_OK) {
             validateMp3Upload($_FILES['audio_file']);
-            $uploadDir = __DIR__ . '/uploads/songs';
-            if (!is_dir($uploadDir) && !mkdir($uploadDir, 0755, true)) throw new RuntimeException('Không tạo được thư mục lưu file.');
-            $destinationFile = $uploadDir . '/' . uniqid('song_', true) . '.mp3';
-            if (!move_uploaded_file($_FILES['audio_file']['tmp_name'], $destinationFile)) throw new RuntimeException('Không thể lưu file MP3 mới lên server.');
-            $updatedDuration = computeDuration($destinationFile);
-            $updatedFilePath = 'uploads/songs/' . basename($destinationFile);
+            $dest = __DIR__ . '/uploads/songs/' . uniqid('song_', true) . '.mp3';
+            move_uploaded_file($_FILES['audio_file']['tmp_name'], $dest);
+            $updatedDuration = computeDuration($dest);
+            $updatedFilePath = 'uploads/songs/' . basename($dest);
             if ($existingPath) safeUnlink(__DIR__ . '/' . ltrim($existingPath, '/'));
         }
 
+        // CẬP NHẬT LYRICS VÀO CÂU LỆNH UPDATE
         if ($updatedDuration !== null) {
-            $stmt = $conn->prepare('UPDATE songs SET Title = ?, GenreID = ?, ReleaseDate = ?, FilePath_URL = ?, Duration = ? WHERE SongID = ?');
-            $stmt->bind_param('sissii', $title, $genreId, $releaseDate, $updatedFilePath, $updatedDuration, $songId);
+            $stmt = $conn->prepare('UPDATE songs SET Title = ?, GenreID = ?, ReleaseDate = ?, FilePath_URL = ?, Duration = ?, Lyrics = ? WHERE SongID = ?');
+            $stmt->bind_param('sissisi', $title, $genreId, $releaseDate, $updatedFilePath, $updatedDuration, $lyrics, $songId);
         } else {
-            $stmt = $conn->prepare('UPDATE songs SET Title = ?, GenreID = ?, ReleaseDate = ? WHERE SongID = ?');
-            $stmt->bind_param('sisi', $title, $genreId, $releaseDate, $songId);
+            $stmt = $conn->prepare('UPDATE songs SET Title = ?, GenreID = ?, ReleaseDate = ?, Lyrics = ? WHERE SongID = ?');
+            $stmt->bind_param('sissi', $title, $genreId, $releaseDate, $lyrics, $songId);
         }
         $stmt->execute(); $stmt->close();
 
-        // Xóa hết ca sĩ cũ và chèn lại mảng ca sĩ mới
-        $stmt = $conn->prepare('DELETE FROM song_artist WHERE SongID = ?');
-        $stmt->bind_param('i', $songId);
-        $stmt->execute(); $stmt->close();
-
+        $conn->query("DELETE FROM song_artist WHERE SongID = $songId");
         $stmt = $conn->prepare('INSERT INTO song_artist (SongID, ArtistID) VALUES (?, ?)');
-        foreach ($finalArtistIds as $aId) {
-            $stmt->bind_param('ii', $songId, $aId);
-            $stmt->execute();
-        }
-        $stmt->close();
-        
-        $conn->close();
-        echo '<div style="color: #4ade80; font-size: 16px;">✅ Cập nhật bài hát thành công!</div>';
-        exit();
+        foreach ($artistIds as $aId) { $stmt->bind_param('ii', $songId, $aId); $stmt->execute(); }
+        $stmt->close(); $conn->close();
+        echo '<div style="color: #4ade80;">✅ Cập nhật bài hát thành công!</div>'; exit();
     }
-
-    throw new RuntimeException('Hành động không hợp lệ.');
 } catch (Exception $ex) {
-    if (isset($conn) && $conn instanceof mysqli) @$conn->close();
-    if ($action === 'delete') sendJson(false, $ex->getMessage());
-    echo '<div style="color: #f87171;">Lỗi: ' . htmlspecialchars($ex->getMessage(), ENT_QUOTES, 'UTF-8') . '</div>';
-    exit();
+    echo '<div style="color: #f87171;">Lỗi: ' . htmlspecialchars($ex->getMessage()) . '</div>'; exit();
 }

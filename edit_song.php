@@ -11,18 +11,11 @@ if ($songId <= 0) {
     exit();
 }
 
-$servername = "localhost";
-$username = "root";
-$password = "vertrigo";
-$dbname = "song_management";
+$servername = "localhost"; $username = "root"; $password = "vertrigo"; $dbname = "song_management";
 $conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    echo '<div style="color:white;">Không thể kết nối cơ sở dữ liệu.</div>';
-    exit();
-}
 
-// Truy vấn lấy dữ liệu bài hát và nối tất cả ID ca sĩ lại với nhau
-$stmt = $conn->prepare('SELECT s.SongID, s.Title, s.ReleaseDate, s.FilePath_URL, s.Duration, s.GenreID, GROUP_CONCAT(sa.ArtistID) AS ArtistIDs
+// Truy vấn lấy dữ liệu bao gồm cả cột Lyrics
+$stmt = $conn->prepare('SELECT s.SongID, s.Title, s.ReleaseDate, s.FilePath_URL, s.GenreID, s.Lyrics, GROUP_CONCAT(sa.ArtistID) AS ArtistIDs
                         FROM songs s
                         LEFT JOIN song_artist sa ON sa.SongID = s.SongID
                         WHERE s.SongID = ?
@@ -35,18 +28,14 @@ $stmt->close();
 
 if (!$song) {
     echo '<div style="color:white;">Không tìm thấy bài hát.</div>';
-    $conn->close();
-    exit();
+    $conn->close(); exit();
 }
 
 $genreResult = $conn->query("SELECT GenreID, Name FROM genres ORDER BY Name ASC");
 $artistResult = $conn->query("SELECT ArtistID, Name FROM artists ORDER BY Name ASC");
 $conn->close();
 
-// --- XỬ LÝ DỮ LIỆU CŨ HIỆN TẠI CỦA BÀI HÁT ĐỂ HIỂN THỊ LÊN FORM ---
 $currentGenreId = intval($song['GenreID']);
-
-// Tách chuỗi "1,2" thành mảng [1, 2] ngay tại đây cho an toàn
 $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['ArtistIDs']) : [];
 ?>
 
@@ -66,14 +55,10 @@ $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['Artist
             File MP3 mới (nếu muốn đổi)
             <input type="file" name="audio_file" accept="audio/mp3,audio/mpeg" style="width: 100%; margin-top: 5px;">
         </label>
-        <?php if (!empty($song['FilePath_URL'])): ?>
-            <div style="font-size: 13px; color: #aaa;">Đang sử dụng: <a href="<?php echo htmlspecialchars($song['FilePath_URL'], ENT_QUOTES, 'UTF-8'); ?>" target="_blank" style="color: var(--purple-primary);">Mở file hiện tại</a></div>
-        <?php endif; ?>
         
         <label>
             Thể loại
             <select name="genre_id" class="search-select" required style="width: 100%;">
-                <option value="">-- Gõ để tìm thể loại --</option>
                 <?php while ($genre = $genreResult->fetch_assoc()): ?>
                     <option value="<?php echo $genre['GenreID']; ?>" <?php echo $genre['GenreID'] == $currentGenreId ? 'selected' : ''; ?>><?php echo htmlspecialchars($genre['Name'], ENT_QUOTES, 'UTF-8'); ?></option>
                 <?php endwhile; ?>
@@ -81,7 +66,7 @@ $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['Artist
         </label>
         
         <label>
-            Ca sĩ (Có thể chọn nhiều)
+            Ca sĩ
             <select name="artist_ids[]" class="search-select" multiple="multiple" required style="width: 100%;">
                 <?php while ($artist = $artistResult->fetch_assoc()): ?>
                     <option value="<?php echo $artist['ArtistID']; ?>" <?php echo in_array($artist['ArtistID'], $currentArtistIdsArray) ? 'selected' : ''; ?>>
@@ -94,6 +79,11 @@ $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['Artist
         <label>
             Ngày phát hành
             <input type="date" name="release_date" max="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($song['ReleaseDate'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" style="width: 100%; padding: 8px; margin-top: 5px;">
+        </label>
+
+        <label>
+            Lời bài hát
+            <textarea name="lyrics" rows="8" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; resize: vertical;"><?php echo htmlspecialchars($song['Lyrics'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
         </label>
         
         <div style="display: flex; gap: 10px; margin-top: 10px;">
