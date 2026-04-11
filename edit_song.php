@@ -42,7 +42,7 @@ $currentArtistIdsArray = !empty($song['ArtistIDs']) ? explode(',', $song['Artist
 
 <h2>Sửa bài hát</h2>
 
-<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true" data-delay-reload-url="admin_songs.php">
+<form action="song_action.php" method="POST" enctype="multipart/form-data" data-ajax="true">
     <input type="hidden" name="action" value="update">
     <input type="hidden" name="song_id" value="<?php echo $song['SongID']; ?>">
     

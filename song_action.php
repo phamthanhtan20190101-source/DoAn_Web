@@ -46,6 +46,82 @@ if (stripos($contentType, 'application/json') !== false) {
     $action = getPostValue('action');
 }
 
+// =========================================================================
+// CHỐT KIỂM TRA RÀNG BUỘC DỮ LIỆU (VALIDATION CHECKPOINT)
+// =========================================================================
+if (in_array($action, ['create', 'update'])) {
+    try {
+        $titleCheck = trim($_POST['title'] ?? '');
+        $genreCheck = intval($_POST['genre_id'] ?? 0);
+        $artistsCheck = $_POST['artist_ids'] ?? [];
+        $dateCheck = trim($_POST['release_date'] ?? '');
+        $idCheck = intval($_POST['song_id'] ?? 0);
+
+        // [RÀNG BUỘC 1] Bắt buộc nhập
+        if (empty($titleCheck)) throw new Exception("Tên bài hát không được để trống.");
+        if (empty($genreCheck)) throw new Exception("Vui lòng chọn Thể loại cho bài hát.");
+        if (empty($artistsCheck) || !is_array($artistsCheck)) throw new Exception("Vui lòng chọn ít nhất một Ca sĩ.");
+
+        // [RÀNG BUỘC 2] Ngày phát hành không được lớn hơn hiện tại
+        if (!empty($dateCheck)) {
+            $currentDate = date('Y-m-d');
+            if ($dateCheck > $currentDate) throw new Exception("Ngày phát hành ($dateCheck) không được vượt quá ngày hôm nay.");
+            $year = intval(date('Y', strtotime($dateCheck)));
+            if ($year < 1900) throw new Exception("Ngày phát hành không hợp lệ (Phải từ năm 1900 trở lên).");
+        }
+
+        // [RÀNG BUỘC 3] Kiểm tra định dạng file âm thanh
+        if ($action === 'create') {
+            if (!isset($_FILES['audio_file']) || $_FILES['audio_file']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception("Vui lòng tải lên file âm thanh (.mp3) cho bài hát mới.");
+            }
+        }
+        if (isset($_FILES['audio_file']) && $_FILES['audio_file']['error'] === UPLOAD_ERR_OK) {
+            $fileExt = strtolower(pathinfo($_FILES['audio_file']['name'], PATHINFO_EXTENSION));
+            if ($fileExt !== 'mp3') {
+                throw new Exception("Hệ thống chỉ hỗ trợ file âm thanh định dạng .MP3!");
+            }
+        }
+
+        // [RÀNG BUỘC 4] Chống trùng lặp (Cùng Tên bài hát + Cùng Ca sĩ)
+        $connCheck = getDbConnection();
+        $artistInClause = implode(',', array_map('intval', $artistsCheck));
+        $checkDupSql = "SELECT s.SongID FROM songs s 
+                        JOIN song_artist sa ON s.SongID = sa.SongID 
+                        WHERE s.Title = ? AND sa.ArtistID IN ($artistInClause) AND s.SongID != ?";
+        $stmtCheck = $connCheck->prepare($checkDupSql);
+        $stmtCheck->bind_param("si", $titleCheck, $idCheck);
+        $stmtCheck->execute();
+        if ($stmtCheck->get_result()->num_rows > 0) {
+            $stmtCheck->close();
+            throw new Exception("Bài hát '$titleCheck' do (các) ca sĩ này thể hiện đã tồn tại trong hệ thống. Vui lòng kiểm tra lại để tránh trùng lặp!");
+        }
+        $stmtCheck->close();
+        $connCheck->close(); // Đóng kết nối tạm thời của khối kiểm tra
+
+    } catch (Exception $e) {
+        // NẾU VI PHẠM: IN RA BẢNG ĐỎ VÀ DỪNG CHƯƠNG TRÌNH NGAY LẬP TỨC
+        http_response_code(200); 
+        echo '<div style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #f87171; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; font-size: 15px;">';
+        echo '⚠️ KHÔNG THỂ LƯU: ' . htmlspecialchars($e->getMessage());
+        echo '</div>';
+        
+        // [TRICK BẢO VỆ] Đóng băng chức năng tự động chuyển trang trong 1 giây, và bật Popup
+        echo '<img src="x" onerror="
+            if(typeof window.loadContent === \'function\') {
+                var oldFunc = window.loadContent;
+                window.loadContent = function(){ console.log(\'Đã chặn auto-reload để hiện lỗi!\'); }; 
+                setTimeout(function(){ window.loadContent = oldFunc; }, 1000);
+            }
+            alert(\'⚠️ LỖI: ' . addslashes($e->getMessage()) . '\');
+        " style="display:none;">';
+
+        echo '<button type="button" class="btn-admin" style="margin-top:10px; background: #4b5563;" onclick="loadContent(\'admin_songs.php\')"><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách</button>';
+        exit(); 
+    }
+}
+// =========================================================================
+
 try {
     if ($action === 'delete') {
         $payload = json_decode(file_get_contents('php://input'), true);
@@ -75,7 +151,7 @@ try {
         move_uploaded_file($_FILES['audio_file']['tmp_name'], $destinationFile);
 
         $duration = computeDuration($destinationFile);
-        $storedPath = 'uploads/songs/' . basename($destinationFile);
+        $filePath = 'uploads/songs/' . basename($destinationFile); // Đã sửa biến này để đồng nhất với hàm bind_param bên dưới
 
         // THÊM LYRICS VÀO CÂU LỆNH INSERT
         $stmt = $conn->prepare('INSERT INTO songs (Title, GenreID, AlbumID, ReleaseDate, FilePath_URL, Duration, Lyrics) VALUES (?, ?, ?, ?, ?, ?, ?)');
@@ -86,7 +162,11 @@ try {
         $stmt = $conn->prepare('INSERT INTO song_artist (SongID, ArtistID) VALUES (?, ?)');
         foreach ($artistIds as $aId) { $stmt->bind_param('ii', $newSongId, $aId); $stmt->execute(); }
         $stmt->close(); $conn->close();
-        echo '<div style="color: #4ade80;">✅ Thêm bài hát thành công!</div>'; exit();
+        
+        // Thêm chuyển hướng tự động bằng JS khi thành công
+        echo '<div style="color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px;">✅ Thêm bài hát thành công!</div>'; 
+        echo '<img src="x" onerror="setTimeout(() => loadContent(\'admin_songs.php\'), 1500)" style="display:none;">';
+        exit();
     }
 
     if ($action === 'update') {
@@ -120,7 +200,11 @@ try {
         $stmt = $conn->prepare('INSERT INTO song_artist (SongID, ArtistID) VALUES (?, ?)');
         foreach ($artistIds as $aId) { $stmt->bind_param('ii', $songId, $aId); $stmt->execute(); }
         $stmt->close(); $conn->close();
-        echo '<div style="color: #4ade80;">✅ Cập nhật bài hát thành công!</div>'; exit();
+        
+        // Thêm chuyển hướng tự động bằng JS khi thành công
+        echo '<div style="color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px;">✅ Cập nhật bài hát thành công!</div>'; 
+        echo '<img src="x" onerror="setTimeout(() => loadContent(\'admin_songs.php\'), 1500)" style="display:none;">';
+        exit();
     }
 } catch (Exception $ex) {
     echo '<div style="color: #f87171;">Lỗi: ' . htmlspecialchars($ex->getMessage()) . '</div>'; exit();
