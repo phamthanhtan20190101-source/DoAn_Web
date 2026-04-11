@@ -8,13 +8,15 @@ $conn->set_charset('utf8mb4');
 $keyword = isset($_GET['q']) ? trim($_GET['q']) : '';
 $searchParam = "%{$keyword}%";
 
-// Tìm kiếm theo Tên bài hát HOẶC Tên ca sĩ
+// ĐÃ SỬA LỖI Ở ĐÂY: Thêm HAVING để nó thực sự lọc theo Tên bài hát hoặc Tên nhóm ca sĩ
 $sql = "SELECT s.SongID, s.Title, s.Duration, s.FilePath_URL, s.CoverImage_URL, GROUP_CONCAT(a.Name SEPARATOR ', ') AS ArtistName 
         FROM songs s
         LEFT JOIN song_artist sa ON s.SongID = sa.SongID
         LEFT JOIN artists a ON sa.ArtistID = a.ArtistID
         GROUP BY s.SongID
+        HAVING s.Title LIKE ? OR ArtistName LIKE ?
         ORDER BY s.SongID DESC";
+
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ss", $searchParam, $searchParam);
 $stmt->execute();
@@ -25,7 +27,6 @@ $index = 0;
 ?>
 
 <style>
-    /* Đã xóa CSS của library-header vì không dùng nữa */
     .song-list-container { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
     .song-item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; transition: 0.3s; }
     .song-item-row:hover { background: rgba(255, 255, 255, 0.1); }
