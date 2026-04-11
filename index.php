@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lyrx - Đồ án Lập trình Web</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ================= BIẾN MÀU SẮC CHUẨN ================= */
@@ -148,7 +149,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
 <body>
-
+    <div id="globalNotify" style="position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 10px; font-size: 14px; font-weight: bold; color: white; z-index: 9999; opacity: 0; transform: translateY(-20px); transition: all 0.3s ease; pointer-events: none;"></div>
     <div id="welcomeBox" class="welcome-box"></div>
     
     <div id="avatarDropdown" class="avatar-dropdown">
@@ -203,8 +204,8 @@
                     </ul>
                     <div class="divider"></div>
                     <ul class="menu-list">
-                        <li class="menu-item"><i class="fa-solid fa-music"></i> BXH Nhạc Mới</li>
-                        <li class="menu-item"><i class="fa-solid fa-icons"></i> Chủ Đề & Thể Loại</li>
+                        <li class="menu-item" onclick="loadContent('chart_new_releases.php')"><i class="fa-solid fa-music"></i> BXH Nhạc Mới</li>
+                        <li class="menu-item" onclick="loadContent('topic_genre.php')"><i class="fa-solid fa-icons"></i> Chủ Đề & Thể Loại</li>
                         <li class="menu-item"><i class="fa-regular fa-star"></i> Top 100</li>
                     </ul>
                     <?php if (!isset($_SESSION['username'])): ?>
@@ -220,8 +221,8 @@
         <main class="main-container">
             <header class="header">
                 <div class="header-left">
-                    <i class="fa-solid fa-arrow-left nav-btn"></i>
-                    <i class="fa-solid fa-arrow-right nav-btn"></i>
+                    <i id="btn-nav-back" class="fa-solid fa-arrow-left nav-btn" onclick="goBack()" style="opacity: 0.3; cursor: default;"></i>
+                    <i id="btn-nav-forward" class="fa-solid fa-arrow-right nav-btn" onclick="goForward()" style="opacity: 0.3; cursor: default;"></i>
                     <div class="search-bar">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" placeholder="Tìm kiếm bài hát, nghệ sĩ...">
@@ -239,12 +240,35 @@
 
     <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin'): ?>
     <footer class="player">
-        <div class="player-left"><div class="song-thumb"></div><div class="song-info"><div class="song-title">...</div><div class="song-artist">...</div></div></div>
-        <div class="player-center">
-            <div class="control-buttons"><i class="fa-solid fa-shuffle"></i><i class="fa-solid fa-backward-step"></i><i class="fa-regular fa-circle-play btn-play"></i><i class="fa-solid fa-forward-step"></i><i class="fa-solid fa-repeat"></i></div>
-            <div class="progress-container"><span>00:00</span><div class="progress-bar"><div class="current-progress"></div></div><span>00:00</span></div>
+        <div class="player-left">
+            <div class="song-thumb"></div>
+            <div class="song-info">
+                <div class="song-title">...</div>
+                <div class="song-artist">...</div>
+            </div>
         </div>
-        <div class="player-right"><i class="fa-solid fa-volume-high"></i><div class="volume-bar"></div></div>
+        <div class="player-center">
+            <div class="control-buttons">
+                <i class="fa-solid fa-shuffle btn-shuffle"></i>
+                <i class="fa-solid fa-backward-step btn-prev"></i>
+                <i class="fa-regular fa-circle-play btn-play"></i>
+                <i class="fa-solid fa-forward-step btn-next"></i>
+                <i class="fa-solid fa-repeat btn-repeat"></i>
+            </div>
+            <div class="progress-container">
+                <span class="time-current">00:00</span>
+                <div class="progress-bar">
+                    <div class="current-progress"></div>
+                </div>
+                <span class="time-total">00:00</span>
+            </div>
+        </div>
+        <div class="player-right">
+            <i class="fa-solid fa-volume-high"></i>
+            <div class="volume-bar">
+                <div class="current-volume" style="width: 50%;"></div>
+            </div>
+        </div>
     </footer>
     <?php endif; ?>
 
@@ -273,6 +297,84 @@
             <div style="font-size: 13px; margin-top: 15px; color: var(--text-secondary); cursor: pointer;" onclick="openLoginModal()">Đã có tài khoản? Đăng nhập</div>
         </div>
     </div>
+
+    <div id="addToPlaylistModal" class="modal-overlay" style="z-index: 2500;">
+        <div class="modal-content" style="width: 350px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;">
+            <h3 style="color: white; margin-bottom: 20px; font-size: 18px;">Thêm vào Playlist</h3>
+            
+            <div id="playlistNotify" style="display: none; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; font-weight: bold; text-align: center; transition: 0.3s;"></div>
+
+            <div id="userPlaylistsContainer" style="max-height: 250px; overflow-y: auto; text-align: left; margin-bottom: 20px; border-radius: 8px; background: rgba(0,0,0,0.2);">
+                </div>
+            
+            <button onclick="closeAddToPlaylistModal()" style="width: 100%; background: transparent; padding: 10px; border-radius: 20px; color: white; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Đóng</button>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIC XỬ LÝ THÊM VÀO PLAYLIST ---
+        let currentSongIdToAdd = 0;
+
+        window.openAddToPlaylistModal = function(songId) {
+            if (!isLoggedIn) { alert('Vui lòng đăng nhập để sử dụng tính năng này!'); return; }
+            currentSongIdToAdd = songId;
+            
+            const notify = document.getElementById('playlistNotify');
+            if (notify) notify.style.display = 'none';
+
+            document.getElementById('addToPlaylistModal').style.display = 'flex';
+            
+            fetch('user_action.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=get_user_playlists'
+            })
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('userPlaylistsContainer');
+                if (data.success && data.playlists.length > 0) {
+                    container.innerHTML = data.playlists.map(pl => `
+                        <div onclick="submitAddSongToPlaylist(${pl.PlaylistID})" style="padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); color: white; cursor: pointer; transition: 0.2s; display: flex; align-items: center;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                            <i class="fa-solid fa-list-music" style="margin-right: 12px; color: var(--purple-primary); font-size: 16px;"></i> 
+                            <span style="font-weight: 500; font-size: 14px;">${pl.Title}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<p style="color: gray; text-align: center; padding: 20px;">Bạn chưa có Playlist nào.<br><br><small>Hãy vào Thư viện để tạo Playlist nhé!</small></p>';
+                }
+            });
+        };
+
+        window.closeAddToPlaylistModal = function() {
+            document.getElementById('addToPlaylistModal').style.display = 'none';
+        };
+
+        window.submitAddSongToPlaylist = function(playlistId) {
+            fetch('user_action.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: `action=add_to_playlist&song_id=${currentSongIdToAdd}&playlist_id=${playlistId}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                const notify = document.getElementById('playlistNotify');
+                notify.style.display = 'block';
+                notify.textContent = data.message;
+
+                if (data.success) {
+                    notify.style.background = 'rgba(16, 185, 129, 0.15)';
+                    notify.style.color = '#10b981';
+                    notify.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    setTimeout(() => { closeAddToPlaylistModal(); }, 1500);
+                } else {
+                    notify.style.background = 'rgba(239, 68, 68, 0.15)';
+                    notify.style.color = '#ef4444';
+                    notify.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                    setTimeout(() => { notify.style.display = 'none'; }, 3000);
+                }
+            });
+        };
+    </script>
 
     <script>
         const mainContent = document.getElementById('main-content-area');
@@ -304,7 +406,10 @@
             avatarDropdown.classList.toggle('show');
         }
 
-        function loadContent(url) {
+        let pageHistory = [];
+        let currentHistoryIndex = -1;
+
+        function loadContent(url, isHistoryNav = false) {
             fetch(url, { credentials: 'same-origin' })
                 .then(res => res.text())
                 .then(html => {
@@ -318,10 +423,76 @@
                     });
                     attachAjaxFormHandler();
                     if (typeof $ !== 'undefined') { $('.search-select').select2({ width: '100%', tags: true }); }
+
+                    // LOGIC LƯU LỊCH SỬ KHI CHUYỂN TRANG
+                    if (!isHistoryNav) {
+                        // Cắt bỏ nhánh tương lai nếu người dùng lùi lại rồi lại rẽ sang trang mới
+                        pageHistory = pageHistory.slice(0, currentHistoryIndex + 1);
+                        pageHistory.push(url);
+                        currentHistoryIndex++;
+                    }
+                    updateNavButtons(); // Cập nhật màu sắc 2 nút mũi tên
                 })
                 .catch(err => console.error('Lỗi load:', err));
         }
 
+        // --- CÁC HÀM ĐIỀU KHIỂN NÚT BACK / FORWARD ---
+        function goBack() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                loadContent(pageHistory[currentHistoryIndex], true);
+            }
+        }
+
+        function goForward() {
+            if (currentHistoryIndex < pageHistory.length - 1) {
+                currentHistoryIndex++;
+                loadContent(pageHistory[currentHistoryIndex], true);
+            }
+        }
+
+        function updateNavButtons() {
+            const backBtn = document.getElementById('btn-nav-back');
+            const fwdBtn = document.getElementById('btn-nav-forward');
+            
+            if (backBtn) {
+                backBtn.style.opacity = currentHistoryIndex > 0 ? '1' : '0.3';
+                backBtn.style.cursor = currentHistoryIndex > 0 ? 'pointer' : 'default';
+            }
+            if (fwdBtn) {
+                fwdBtn.style.opacity = currentHistoryIndex < pageHistory.length - 1 ? '1' : '0.3';
+                fwdBtn.style.cursor = currentHistoryIndex < pageHistory.length - 1 ? 'pointer' : 'default';
+            }
+        }
+
+        // --- HÀM ĐIỀU KHIỂN HỘP THÔNG BÁO MÀU MÈ ---
+        function showGlobalNotify(message, isSuccess) {
+            const notify = document.getElementById('globalNotify');
+            if (!notify) return;
+            
+            notify.textContent = message;
+            if (isSuccess) {
+                notify.style.background = 'rgba(16, 185, 129, 0.95)'; // Xanh lá
+                notify.style.border = '1px solid #10b981';
+                notify.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.2)';
+            } else {
+                notify.style.background = 'rgba(239, 68, 68, 0.95)'; // Đỏ
+                notify.style.border = '1px solid #ef4444';
+                notify.style.boxShadow = '0 10px 30px rgba(239, 68, 68, 0.2)';
+            }
+            
+            // Hiệu ứng trượt xuống và hiện rõ
+            notify.style.opacity = '1';
+            notify.style.transform = 'translateY(0)';
+            
+            // Tự động mờ đi sau 3 giây
+            setTimeout(() => {
+                notify.style.opacity = '0';
+                notify.style.transform = 'translateY(-20px)';
+            }, 3000);
+        }
+
+        // --- HÀM XỬ LÝ FORM ĐÃ LOẠI BỎ ALERT ---
         function attachAjaxFormHandler() {
             const ajaxForms = mainContent.querySelectorAll('form[data-ajax]');
             ajaxForms.forEach(form => {
@@ -331,8 +502,34 @@
                     e.preventDefault();
                     const formData = new FormData(form);
                     const res = await fetch(form.getAttribute('action'), { method: form.getAttribute('method') || 'POST', body: formData });
-                    const result = await res.text();
-                    if (form.dataset.reloadUrl) { loadContent(form.dataset.reloadUrl); } else { mainContent.innerHTML = result; attachAjaxFormHandler(); if (form.dataset.delayReloadUrl) { setTimeout(() => { loadContent(form.dataset.delayReloadUrl); }, 2000); } }
+                    
+                    try {
+                        const data = await res.clone().json(); 
+                        
+                        // GỌI THÔNG BÁO XỊN THAY VÌ DÙNG ALERT
+                        showGlobalNotify(data.message, data.success); 
+                        
+                        if (data.success) {
+                            // Đợi 0.8 giây để user kịp nhìn thông báo rồi mới chuyển trang
+                            if (form.dataset.delayReloadUrl) {
+                                setTimeout(() => loadContent(form.dataset.delayReloadUrl), 800);
+                            } else if (form.dataset.reloadUrl) {
+                                loadContent(form.dataset.reloadUrl);
+                            }
+                        } else {
+                            const btn = form.querySelector('button[type=submit]');
+                            if (btn) { btn.disabled = false; btn.innerText = 'Thử lại'; }
+                        }
+                    } catch (err) {
+                        const result = await res.text();
+                        if (form.dataset.reloadUrl) { 
+                            loadContent(form.dataset.reloadUrl); 
+                        } else { 
+                            mainContent.innerHTML = result; 
+                            attachAjaxFormHandler(); 
+                            if (form.dataset.delayReloadUrl) setTimeout(() => { loadContent(form.dataset.delayReloadUrl); }, 2000); 
+                        }
+                    }
                 });
             });
         }
@@ -345,6 +542,25 @@
         window.deleteCategory = function(type, id) {
             if (!confirm('Bạn có chắc muốn xóa?')) return;
             fetch('category_action.php', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'delete', type: type, id: id}) }).then(res => res.json()).then(data => { alert(data.message); if (data.success) { const reloadMap = { 'genre': 'admin_genres.php', 'artist': 'admin_artists.php', 'album': 'admin_albums.php', 'comment': 'admin_comments.php', 'banner': 'admin_banners.php' }; loadContent(reloadMap[type]); } });
+        };
+
+        window.toggleFavorite = function(songId, btn) {
+            if (!isLoggedIn) { alert('Vui lòng đăng nhập để thả tim!'); return; }
+            fetch('user_action.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'action=toggle_favorite&song_id=' + songId
+            }).then(res => res.json()).then(data => {
+                if (data.success) {
+                    if (data.status === 'added') {
+                        btn.className = 'fa-solid fa-heart action-sub-icon btn-heart';
+                        btn.style.color = '#ff4081';
+                    } else {
+                        btn.className = 'fa-regular fa-heart action-sub-icon btn-heart';
+                        btn.style.color = 'white';
+                    }
+                } else alert(data.message);
+            });
         };
 
         const searchInput = document.querySelector('.search-bar input');
@@ -366,7 +582,7 @@
             mainApp.addEventListener('click', function(e) { const menuItem = e.target.closest('.menu-item'); if (menuItem) { document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active')); menuItem.classList.add('active'); } });
         });
     </script>
-    <script src="player.js"></script>
+    <script src="player.js?v=<?php echo time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
