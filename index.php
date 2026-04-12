@@ -187,6 +187,7 @@
         /* Hover vào ảnh khi đang Tạm dừng: Ẩn sóng đi, hiện lại nút Play để bấm tiếp */
         .song-item.is-paused:hover .playing-icon { display: none !important; }
         .song-item.is-paused:hover .overlay-icon-play-small { display: block; }
+        
     
     </style>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

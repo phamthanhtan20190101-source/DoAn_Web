@@ -22,13 +22,20 @@ $stmtArtist->close();
 
 // 2. TÌM KIẾM BÀI HÁT (Giữ nguyên logic SQL chuẩn của bạn)
 // Lưu ý: Mình đổi SELECT s.* để hàm renderSongItem lấy được đủ thông tin (ảnh, duration,...)
-$sql = "SELECT s.*, GROUP_CONCAT(a.Name SEPARATOR ', ') AS ArtistName, GROUP_CONCAT(a.Name SEPARATOR ', ') AS Artists 
+// 2. TÌM KIẾM BÀI HÁT (ĐÃ TỐI ƯU HÓA HIỆU NĂNG)
+$sql = "SELECT s.*, 
+               (SELECT GROUP_CONCAT(a2.Name SEPARATOR ', ') 
+                FROM song_artist sa2 
+                JOIN artists a2 ON sa2.ArtistID = a2.ArtistID 
+                WHERE sa2.SongID = s.SongID) AS Artists
         FROM songs s
-        LEFT JOIN song_artist sa ON s.SongID = sa.SongID
-        LEFT JOIN artists a ON sa.ArtistID = a.ArtistID
-        GROUP BY s.SongID
-        HAVING s.Title LIKE ? OR ArtistName LIKE ?
-        ORDER BY s.PlayCount DESC, s.SongID DESC";
+        WHERE s.Title LIKE ? 
+           OR EXISTS (
+               SELECT 1 FROM song_artist sa3 
+               JOIN artists a3 ON sa3.ArtistID = a3.ArtistID 
+               WHERE sa3.SongID = s.SongID AND a3.Name LIKE ?
+           )
+        ORDER BY s.SongID DESC";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("ss", $searchParam, $searchParam);

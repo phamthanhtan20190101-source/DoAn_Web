@@ -261,3 +261,5 @@ if ($result && $result->num_rows > 0) {
             })();
 </script>
 <?php $conn->close(); ?>
+</div>
+    </div> <?php include 'footer.php'; ?>
