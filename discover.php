@@ -5,13 +5,18 @@ include_once 'render_helper.php';
 
 $conn = new mysqli("localhost", "root", "vertrigo", "song_management");
 $conn->set_charset('utf8mb4');
+
+// 1. LẤY DỮ LIỆU ALBUM
 $albumsQuery = $conn->query("SELECT * FROM albums ORDER BY AlbumID DESC LIMIT 5");
+
+// 2. LẤY DỮ LIỆU PLAYLIST MẪU CỦA ADMIN (Mới thêm vào)
+$adminPlaylists = $conn->query("SELECT * FROM playlists WHERE IsAdmin = 1 ORDER BY CreatedAt DESC LIMIT 5");
 
 // Đảm bảo các bảng luôn tồn tại để không bị lỗi
 $conn->query("CREATE TABLE IF NOT EXISTS user_favorites (Username VARCHAR(100), SongID INT, PRIMARY KEY(Username, SongID))");
 $conn->query("CREATE TABLE IF NOT EXISTS user_history (ID INT AUTO_INCREMENT PRIMARY KEY, Username VARCHAR(100), SongID INT, ListenedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
 
-// ================= 1. LẤY DỮ LIỆU BANNER =================
+// ================= 3. LẤY DỮ LIỆU BANNER =================
 $banners = $conn->query("SELECT * FROM banners WHERE IsActive = 1 ORDER BY OrderIndex ASC");
 $bannersData = [];
 if ($banners && $banners->num_rows > 0) {
@@ -20,7 +25,7 @@ if ($banners && $banners->num_rows > 0) {
     }
 }
 
-// ================= 2. LẤY DỮ LIỆU BÀI HÁT (KÈM TRẠNG THÁI TIM) =================
+// ================= 4. LẤY DỮ LIỆU BÀI HÁT MỚI =================
 $username = isset($_SESSION['username']) ? $conn->real_escape_string($_SESSION['username']) : '';
 $sql = "SELECT s.*, GROUP_CONCAT(a.Name SEPARATOR ', ') as Artists 
         FROM songs s 
@@ -35,7 +40,7 @@ $index = 0;
 ?>
 
 <style>
-    /* ================= CSS CHO SLIDER BANNER ================= */
+    /* ================= CSS CHO SLIDER & CẤU TRÚC ================= */
     .discover-container { width: 100%; }
     
     .slider-container { width: 100%; position: relative; overflow: hidden; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 40px; }
@@ -49,8 +54,17 @@ $index = 0;
     .dot:hover { background: rgba(255,255,255,0.8); }
     .dot.active { background: var(--purple-primary); width: 25px; border-radius: 10px; }
 
-    /* ================= CSS BỌC BÀI HÁT ================= */
-    .song-list-container { display: flex; flex-direction: column; gap: 5px; margin-top: 15px; }
+    /* CSS CHUNG CHO GRID ALBUM & PLAYLIST */
+    .content-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; margin-bottom: 40px; }
+    .grid-item { cursor: pointer; transition: 0.3s; }
+    .grid-item:hover .cover-box img { transform: scale(1.1); }
+    .cover-box { width: 100%; aspect-ratio: 1/1; border-radius: 8px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .cover-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+    .grid-item h4 { color: white; font-size: 15px; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .grid-item p { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0; }
+
+    /* CSS BỌC BÀI HÁT */
+    .song-list-container { display: flex; flex-direction: column; gap: 5px; margin-top: 15px; margin-bottom: 50px; }
     .song-item-wrapper { cursor: pointer; }
 </style>
 
@@ -74,30 +88,38 @@ $index = 0;
         <div class="slider-dots" id="sliderDots"></div>
     </div>
 
-    <style>
-        .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; margin-bottom: 40px; }
-        .album-item { cursor: pointer; transition: 0.3s; }
-        .album-item:hover .album-cover-box img { transform: scale(1.1); }
-        .album-cover-box { width: 100%; aspect-ratio: 1/1; border-radius: 8px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .album-cover-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
-        .album-item h4 { color: white; font-size: 15px; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .album-item p { color: rgba(255,255,255,0.5); font-size: 13px; margin: 0; }
-    </style>
-
-    <h2 style="color:white; margin-bottom:20px;">Album Hot</h2>
-    <div class="album-grid">
+    <h2 style="color:white; margin-bottom:20px; font-weight: 800;">Album Hot</h2>
+    <div class="content-grid">
         <?php while($alb = $albumsQuery->fetch_assoc()): ?>
-        <div class="album-item" onclick="loadContent('album_view.php?id=<?php echo $alb['AlbumID']; ?>')">
-            <div class="album-cover-box">
-                <img src="<?php echo $alb['CoverImage_URL']; ?>" alt="">
+        <div class="grid-item" onclick="loadContent('album_view.php?id=<?php echo $alb['AlbumID']; ?>')">
+            <div class="cover-box">
+                <img src="<?php echo $alb['CoverImage_URL']; ?>" alt="" onerror="this.src='https://via.placeholder.com/200?text=Album'">
             </div>
             <h4><?php echo htmlspecialchars($alb['Title']); ?></h4>
             <p>Phát hành: <?php echo $alb['ReleaseYear']; ?></p>
         </div>
         <?php endwhile; ?>
     </div>
-    <h2 style="color:white; margin-bottom:5px;">Mới Phát Hành</h2>
-    
+
+    <h2 style="color:white; margin-bottom:20px; font-weight: 800;">Playlist Gợi Ý</h2>
+    <div class="content-grid">
+        <?php if ($adminPlaylists && $adminPlaylists->num_rows > 0): ?>
+            <?php while($pl = $adminPlaylists->fetch_assoc()): ?>
+            <div class="grid-item" onclick="loadContent('playlist_view.php?id=<?php echo $pl['PlaylistID']; ?>')">
+                <div class="cover-box">
+                    <img src="<?php echo (!empty($pl['Image_URL'])) ? $pl['Image_URL'] : 'images/default_playlist.png'; ?>" 
+                         alt="" onerror="this.src='https://via.placeholder.com/200?text=Playlist'">
+                </div>
+                <h4><?php echo htmlspecialchars($pl['Title']); ?></h4>
+                <p>Bởi Lyrx Music</p>
+            </div>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <p style="color: gray; grid-column: 1/-1;">Đang cập nhật các playlist tuyển tập...</p>
+        <?php endif; ?>
+    </div>
+
+    <h2 style="color:white; margin-bottom:15px; font-weight: 800;">Mới Phát Hành</h2>
     <div class="song-list-container">
         <?php if ($result && $result->num_rows > 0): ?>
             <?php while ($row = $result->fetch_assoc()): ?>
@@ -111,7 +133,7 @@ $index = 0;
                 ];
                 ?>
                 <div class="song-item-wrapper" onclick="if(typeof playPlaylist === 'function') playPlaylist(<?php echo $index; ?>)">
-                    <?php renderSongItem($row); // Gọi hàm render giao diện chuẩn Zing MP3 ?>
+                    <?php renderSongItem($row); ?>
                 </div>
                 <?php $index++; ?>
             <?php endwhile; ?>
@@ -129,6 +151,7 @@ $index = 0;
     (() => {
         const wrapper = document.getElementById('sliderWrapper');
         const dotsContainer = document.getElementById('sliderDots');
+        if (!wrapper || !dotsContainer) return;
         const slides = wrapper.querySelectorAll('.slide');
         const totalSlides = slides.length;
         if (totalSlides === 0) return;
@@ -163,5 +186,3 @@ $index = 0;
 </script>
 
 <?php $conn->close(); ?>
-</div>
-    </div> <?php include 'footer.php'; ?>

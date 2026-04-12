@@ -5,7 +5,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') exit();
 $conn = new mysqli("localhost", "root", "vertrigo", "song_management");
 $conn->set_charset('utf8mb4');
 
-// Lấy danh sách Playlist do Admin tạo (IsAdmin = 1)
 $result = $conn->query("SELECT p.*, a.Username FROM playlists p 
                         LEFT JOIN account a ON p.AccountID = a.AccountID 
                         WHERE p.IsAdmin = 1 ORDER BY p.PlaylistID DESC");
@@ -14,7 +13,7 @@ $result = $conn->query("SELECT p.*, a.Username FROM playlists p
 <h2 style="color: white; margin-bottom: 20px;">Quản lý Playlist mẫu</h2>
 
 <div style="margin-bottom: 20px;">
-    <button type="button" class="btn-admin highlight-green" style="width: fit-content;">+ Tạo Playlist mới</button>
+    <button type="button" class="btn-admin highlight-green" style="width: fit-content;" onclick="openAdminCreatePlaylist()">+ Tạo Playlist mới</button>
 </div>
 
 <div style="color: white;">
@@ -25,7 +24,7 @@ $result = $conn->query("SELECT p.*, a.Username FROM playlists p
                 <th>Tên Playlist</th>
                 <th>Người tạo</th>
                 <th>Ngày tạo</th>
-                <th style="width: 150px;">Hành động</th>
+                <th style="width: 280px;">Hành động</th>
             </tr>
         </thead>
         <tbody>
@@ -40,7 +39,18 @@ $result = $conn->query("SELECT p.*, a.Username FROM playlists p
                         <td><?php echo htmlspecialchars($row['Username'] ?? 'Admin'); ?></td>
                         <td><?php echo date('d/m/Y', strtotime($row['CreatedAt'])); ?></td>
                         <td>
-                            <button type="button" class="btn-admin" style="padding: 5px 10px;" onclick="deleteCategory('playlist', <?php echo $row['PlaylistID']; ?>)">Xóa</button>
+                            <button type="button" class="btn-admin" style="padding: 5px 10px; background: #10b981; margin-right: 5px;" 
+                                    onclick="loadContent('admin_playlist_details.php?id=<?php echo $row['PlaylistID']; ?>')">
+                                Xem bài hát
+                            </button>
+                            <button type="button" class="btn-admin" style="padding: 5px 10px; background: #3b82f6; margin-right: 5px;" 
+                                    onclick="openAdminEditPlaylist(<?php echo $row['PlaylistID']; ?>, '<?php echo addslashes($row['Title']); ?>')">
+                                Sửa
+                            </button>
+                            <button type="button" class="btn-admin" style="padding: 5px 10px; background: #ef4444;" 
+                                    onclick="deleteCategory('playlist', <?php echo $row['PlaylistID']; ?>)">
+                                Xóa
+                            </button>
                         </td>
                     </tr>
                 <?php endwhile; ?>

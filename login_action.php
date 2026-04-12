@@ -52,6 +52,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['username'] = $row['Username'];
             $_SESSION['email'] = $row['Email'];
             $_SESSION['role'] = $row['Role'];
+            
+            // DÒNG MỚI THÊM: Kéo link ảnh từ Database lưu vào Session
+            $_SESSION['avatar_path'] = $row['Avatar_URL'];
+
             header("Location: index.php");
             exit();
         }

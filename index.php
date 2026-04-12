@@ -37,8 +37,16 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         body { color: var(--text-primary); background-color: var(--bg-body); overflow: hidden; }
 
         /* ================= BỐ CỤC TỔNG THỂ ================= */
-        .app { display: flex; height: calc(100vh - 90px); } 
-
+        /* Tự động điều chỉnh chiều cao: Nếu có thanh nhạc thì trừ 90px, nếu admin thì lấy hết 100vh */
+        .app { 
+            display: flex; 
+            height: 100vh; 
+        } 
+        
+        /* Nếu không phải Admin (có footer player) thì mới trừ đi 90px */
+        body:not(.admin-mode) .app {
+            height: calc(100vh - 90px);
+        }
         /* ================= 1. SIDEBAR TRÁI ================= */
         .sidebar { width: 240px; background-color: var(--bg-sidebar); display: flex; flex-direction: column; height: 100%; border-right: 1px solid var(--border-color); }
         .logo-container { padding: 0 25px; cursor: pointer; height: 90px; display: flex; align-items: center; justify-content: flex-start; }
@@ -168,9 +176,6 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         .modal-content button { width: 100%; padding: 10px; background: var(--purple-primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 700; }
         .welcome-box { position: fixed; top: 20px; right: 20px; background: rgba(32, 28, 45, 0.95); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 18px; color: white; box-shadow: 0 14px 40px rgba(0,0,0,0.25); opacity: 0; transform: translateY(-10px); transition: 0.4s ease; z-index: 1100; pointer-events: none; }
         .welcome-box.show { opacity: 1; transform: translateY(0); }
-        .avatar-dropdown { position: absolute; top: 80px; right: 40px; width: 240px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); padding: 18px; display: none; z-index: 1100; }
-        .avatar-dropdown.show { display: block; }
-        .avatar-dropdown .logout-btn { width: 100%; padding: 10px 0; background: #6f55ff; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; margin-top: 10px; }
 
         /* HIỆU ỨNG SÓNG NHẠC */
         @keyframes bounce {
@@ -186,7 +191,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         .song-item.is-paused:hover .playing-icon { display: none !important; }
         .song-item.is-paused:hover .overlay-icon-play-small { display: block; }
         
-        /* ================= BƯỚC 1: CSS MENU CÀI ĐẶT MỚI THÊM VÀO ================= */
+        /* ================= MENU CÀI ĐẶT ================= */
         .settings-wrapper { position: relative; display: inline-block; }
         .settings-menu {
             position: absolute; top: 130%; right: 0; width: 280px;
@@ -239,28 +244,12 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         .radio-row:hover { color: white; }
         .radio-row input[type="radio"] { accent-color: var(--purple-primary); transform: scale(1.2); cursor: pointer;}
 
-        /* setting bên phải */
-        /* ================= MODAL VĂN BẢN (TERMS & PRIVACY) ================= */
-        .doc-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 3000; }
-        .doc-modal-container { width: 850px; max-width: 95vw; height: 85vh; background: white; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .doc-modal-header { padding: 20px 30px; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; background: white; flex-shrink: 0; }
-        .doc-modal-header h2 { color: #333; font-size: 22px; margin: 0; font-weight: 700; text-transform: uppercase;}
-        .doc-btn-close { font-size: 28px; color: #888; cursor: pointer; transition: 0.2s; line-height: 1; }
-        .doc-btn-close:hover { color: #333; }
-        .doc-modal-body { padding: 30px 40px; overflow-y: auto; color: #333; font-size: 15px; line-height: 1.7; text-align: justify; }
-        .doc-modal-body h3 { color: #d64a61; font-size: 18px; margin-top: 30px; margin-bottom: 15px; font-weight: 600; }
-        .doc-modal-body h3:first-child { margin-top: 0; }
-        .doc-modal-body p { margin-bottom: 12px; }
-        .doc-modal-body ul { margin-left: 20px; margin-bottom: 12px; }
-        .doc-modal-body li { margin-bottom: 8px; }
-
-
-        /* ================= TRUNG TÂM HỖ TRỢ (GIỚI THIỆU / BẢN QUYỀN / QUẢNG CÁO / LIÊN HỆ) ================= */
+        /* ================= TRUNG TÂM HỖ TRỢ (GIỚI THIỆU / BẢN QUYỀN / QUẢNG CÁO / LIÊN HỆ / THỎA THUẬN / CHÍNH SÁCH) ================= */
         .help-modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; display: none; z-index: 3500; overflow: hidden; }
         .help-container { display: flex; width: 100%; height: 100%; max-width: 1200px; margin: 0 auto; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
         
         /* Menu bên trái */
-        .help-sidebar { width: 250px; border-right: 1px solid #eaeaea; padding: 40px 0; background: #fbfbfb; flex-shrink: 0; }
+        .help-sidebar { width: 250px; border-right: 1px solid #eaeaea; padding: 40px 0; background: #fbfbfb; flex-shrink: 0; overflow-y: auto; }
         .help-sidebar .help-tab-btn { padding: 15px 30px; font-size: 14px; font-weight: 600; color: #555; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .help-sidebar .help-tab-btn:hover { color: var(--purple-primary); }
         .help-sidebar .help-tab-btn.active { color: var(--purple-primary); border-left: 3px solid var(--purple-primary); background: #f0e6f9; }
@@ -284,24 +273,235 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         /* File upload box */
         .upload-box { border: 2px dashed #ccc; padding: 20px; text-align: center; border-radius: 6px; background: #fafafa; cursor: pointer; color: #777; font-size: 14px; }
         .upload-box:hover { border-color: var(--purple-primary); color: var(--purple-primary); }
+
+        /* ================= AVATAR DROPDOWN MỚI ================= */
+        .avatar-dropdown {
+            position: absolute; top: 80px; right: 40px; width: 300px;
+            background: #28104e; border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            display: none; flex-direction: column; z-index: 1100; padding: 0;
+        }
+        .avatar-dropdown.show { display: flex; }
+
+        .dropdown-header {
+            display: flex; align-items: center; gap: 15px; padding: 20px;
+            border-bottom: 1px solid var(--border-color); background-color: var(--bg-sidebar);
+            border-top-left-radius: 8px; border-top-right-radius: 8px;
+        }
+        .user-avatar-container {
+            position: relative; width: 60px; height: 60px; border-radius: 50%; overflow: hidden;
+        }
+        .user-avatar { width: 100%; height: 100%; object-fit: cover; }
+        .change-avatar-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .user-avatar-container:hover .change-avatar-overlay { opacity: 1; }
+
+        .user-name-info { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        .user-name { color: white; font-size: 16px; font-weight: 700; }
+        /* Bỏ background gradient cũ của nút Avatar để nhường chỗ cho ảnh */
+        .btn-setting, .btn-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: none; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; overflow: hidden; padding: 0; }
+        
+        .user-package {
+            display: inline-flex; align-items: center; justify-content: center;
+            padding: 4px 12px; border-radius: 5px; /* Bo góc nhẹ hơn, kéo dài bề ngang */
+            font-size: 11px; font-weight: 800; text-transform: uppercase;
+            width: fit-content; letter-spacing: 0.5px; margin-top: 2px;
+        }
+        /* Chỉnh màu BASIC giống hệt ảnh bạn gửi (Nền xám, chữ trắng) */
+        .basic-package { background-color: #a0a0a0; color: #ffffff; }
+        .vip-package { background-color: #fcd34d; color: #1f2937; }
+        .basic-package { background-color: #f3f4f6; color: #1f2937; }
+        .vip-package { background-color: #fcd34d; color: #1f2937; }
+
+        .dropdown-actions { padding: 15px 20px; display: flex; flex-direction: column; gap: 10px; background-color: #28104e; }
+        .btn-upgrade {
+            display: block; width: 100%; padding: 10px;
+            background-color: #059669; color: white;
+            border: none; border-radius: 6px; font-weight: 700;
+            cursor: pointer; font-size: 14px; text-align: center;
+            text-decoration: none; transition: background-color 0.3s;
+        }
+        .btn-upgrade:hover { background-color: #047857; }
+        .dropdown-actions .logout-btn {
+            display: block; width: 100%; padding: 10px;
+            background-color: #ef4444; color: white;
+            border: none; border-radius: 6px; font-weight: 700;
+            cursor: pointer; font-size: 14px; transition: background-color 0.3s;
+            margin-top: 0;
+        }
+        .dropdown-actions .logout-btn:hover { background-color: #dc2626; }
+
+        .upgrade-package-section { padding: 15px 20px 20px; background-color: #28104e; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+        .upgrade-package-title { color: white; font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+        .upgrade-banner { border-radius: 8px; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
+        .vip-banner { background: linear-gradient(135deg, #fcd34d, #f59e0b); }
+        .banner-title { display: flex; align-items: baseline; gap: 2px; font-weight: 900; font-size: 18px; color: black; }
+        .banner-highlight { color: #b45309; }
+        .banner-subtext { color: #b45309; font-size: 8px; font-weight: 700; text-transform: uppercase; }
+        .banner-package {
+            font-size: 24px; font-weight: 900;
+            background: linear-gradient(135deg, #1f2937, #111827);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+        .banner-desc { color: #1f2937; font-size: 11px; line-height: 1.4; }
+
+        /* ================= GIAO DIỆN LỜI BÀI HÁT ================= */
+        .lyric-panel { position: fixed; top: 100vh; left: 0; width: 100vw; height: calc(100vh - 90px); background: #170f23; z-index: 999; transition: top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); display: flex; overflow: hidden; }
+        .lyric-panel.show { top: 0; }
+        .lyric-bg-blur { position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; filter: blur(60px) brightness(0.4); background-size: cover; background-position: center; z-index: -1; transition: 1s; }
+        .lyric-close-btn { position: absolute; top: 30px; right: 40px; font-size: 30px; color: white; cursor: pointer; z-index: 1000; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
+        .lyric-close-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+        
+        .lyric-left { width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        .lyric-left img { width: 100%; max-width: 280px; aspect-ratio: 1/1; object-fit: cover; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); margin-bottom: 25px; transition: 0.5s; }
+        .lyric-left h2 { color: white; font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 10px; }
+        .lyric-left p { color: rgba(255,255,255,0.6); font-size: 16px; text-align: center; }
+        
+        .lyric-right { width: 60%; height: 100%; overflow-y: auto; scroll-behavior: smooth; padding: 100px 50px 200px 20px; scrollbar-width: none; }
+        .lyric-right::-webkit-scrollbar { display: none; }
+        .lyric-line { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.3); margin-bottom: 25px; transition: all 0.3s; cursor: pointer; transform-origin: left center; }
+        .lyric-line.active { color: #fff; font-size: 32px; text-shadow: 0 0 15px rgba(255,255,255,0.4); transform: scale(1.02); }
+    
+        /* ================= CUSTOM SELECT2 DARK THEME ================= */
+/* 1. Khung chọn chính */
+.select2-container--default .select2-selection--single {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    height: 45px !important;
+    border-radius: 8px !important;
+    display: flex;
+    align-items: center;
+}
+
+/* Chữ trong khung chọn */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: white !important;
+    padding-left: 15px !important;
+    font-size: 14px;
+}
+
+/* Mũi tên xuống */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 45px !important;
+}
+
+/* 2. Khung danh sách xổ xuống */
+.select2-dropdown {
+    background-color: #231b2e !important; /* Màu nền sidebar */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    overflow: hidden;
+    z-index: 9999;
+}
+
+/* 3. Ô tìm kiếm bên trong danh sách */
+.select2-search--dropdown {
+    padding: 10px !important;
+    background-color: #170f23 !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border-radius: 20px !important;
+    padding: 8px 15px !important;
+    outline: none !important;
+}
+
+/* 4. Các mục bài hát trong danh sách */
+.select2-results__option {
+    padding: 10px 15px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 14px;
+}
+
+/* Khi di chuột qua (Hover) hoặc đang chọn */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: var(--purple-primary) !important; /* Màu tím chủ đạo */
+    color: white !important;
+}
+
+/* Khi một mục đã được chọn */
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: rgba(155, 77, 224, 0.2) !important;
+    color: var(--purple-primary) !important;
+}
+    
     </style>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </head>
-<body>
+<body class="<?php echo (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? 'admin-mode' : ''; ?>">
     <div id="globalNotify" style="position: fixed; top: 20px; right: 20px; padding: 15px 25px; border-radius: 10px; font-size: 14px; font-weight: bold; color: white; z-index: 9999; opacity: 0; transform: translateY(-20px); transition: all 0.3s ease; pointer-events: none;"></div>
     <div id="welcomeBox" class="welcome-box"></div>
     
     <div id="avatarDropdown" class="avatar-dropdown">
-        <div id="userInfoArea">
-            <div style="margin-bottom: 12px; font-size: 14px; color: white;"><strong>Tên:</strong> <span id="avatarName"></span></div>
-            <div style="margin-bottom: 12px; font-size: 14px; color: white;"><strong>Email:</strong> <span id="avatarEmail"></span></div>
-            <div style="margin-bottom: 12px; font-size: 14px; color: white;"><strong>Quyền:</strong> <span id="avatarRole"></span></div>
-        </div>
-        <form action="logout.php" method="POST">
-            <button type="submit" class="logout-btn">Đăng xuất</button>
-        </form>
+        <?php if (isset($_SESSION['username'])): 
+            // Kiểm tra xem có phải ADMIN không
+            $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin');
+
+            // Giả lập gói (Thực tế lấy từ DB)
+            $_SESSION['subscription_package'] = 'BASIC'; 
+            $isUpgraded = ($_SESSION['subscription_package'] === 'VIP');
+
+            // XỬ LÝ ẢNH MẶC ĐỊNH & BẮT LỖI
+            $defaultAvatarPath = 'https://ui-avatars.com/api/?name=' . urlencode($_SESSION['username']) . '&background=9b4de0&color=fff&size=150';
+            $avatarPath = (!empty($_SESSION['avatar_path'])) ? $_SESSION['avatar_path'] : $defaultAvatarPath;
+        ?>
+            <div class="dropdown-header">
+                <div class="user-avatar-container">
+                    <img src="<?php echo $avatarPath; ?>" alt="Avatar" class="user-avatar" id="dropdownAvatarImg" onerror="this.src='<?php echo $defaultAvatarPath; ?>'">
+                    <label for="changeAvatarInput" class="change-avatar-overlay">Đổi ảnh</label>
+                    <input type="file" id="changeAvatarInput" style="display: none;" accept="image/*">
+                </div>
+                <div class="user-name-info">
+                    <div class="user-name"><?php echo htmlspecialchars($_SESSION['username']); ?></div>
+                    
+                    <?php if ($isAdmin): ?>
+                        <div class="user-package" style="background-color: #ef4444; color: white;">
+                            ADMIN
+                        </div>
+                    <?php else: ?>
+                        <div class="user-package <?php echo $isUpgraded ? 'vip-package' : 'basic-package'; ?>">
+                            <?php echo $isUpgraded ? 'VIP' : 'BASIC'; ?>
+                        </div>
+                    <?php endif; ?>
+
+                </div>
+            </div>
+
+            <div class="dropdown-actions">
+                <?php if (!$isAdmin && !$isUpgraded): ?>
+                    <button onclick="loadContent('upgrade.php'); toggleAvatarDropdown();" class="btn-upgrade">Nâng cấp tài khoản VIP</button>
+                <?php endif; ?>
+                
+                <form action="logout.php" method="POST" style="margin: 0;">
+                    <button type="submit" class="logout-btn">Đăng xuất</button>
+                </form>
+            </div>
+
+            <?php if (!$isAdmin): ?>
+            <div class="upgrade-package-section">
+                <h4 class="upgrade-package-title">Đặc quyền VIP</h4>
+                <div class="upgrade-banner vip-banner">
+                    <div class="banner-title">
+                        <span>Lyrx</span><span class="banner-highlight">.</span><span class="banner-subtext">music</span>
+                    </div>
+                    <div class="banner-package">VIP</div>
+                    <p class="banner-desc">Thưởng thức âm nhạc không giới hạn với chất lượng cao.</p>
+                </div>
+            </div>
+            <?php endif; ?>
+
+        <?php endif; ?>
     </div>
 
     <div class="app">
@@ -318,11 +518,11 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
                         <li class="menu-item active" onclick="loadContent('admin_dashboard.php')"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
                         <li class="menu-item" onclick="loadContent('admin_banners.php')"><i class="fa-solid fa-images"></i> Quản lý Banner</li>
                         <li class="menu-item" onclick="loadContent('approve_songs.php')">
-    <i class="fa-solid fa-circle-check"></i> Duyệt bài hát
-    <?php if ($pendingCount > 0): ?>
-        <span style="background: #ef4444; color: white; border-radius: 50%; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; margin-left: auto;"><?php echo $pendingCount; ?></span>
-    <?php endif; ?>
-</li>
+                            <i class="fa-solid fa-circle-check"></i> Duyệt bài hát
+                            <?php if ($pendingCount > 0): ?>
+                                <span style="background: #ef4444; color: white; border-radius: 50%; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; margin-left: auto;"><?php echo $pendingCount; ?></span>
+                            <?php endif; ?>
+                        </li>
                     </ul>
                     <h3>Nội dung</h3>
                     <ul class="menu-list">
@@ -380,7 +580,10 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
                     </div>
                 </div>
                 <div class="header-right">
-                    <button class="btn-vip">Nâng cấp tài khoản</button>
+                    
+                    <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin'): ?>
+                        <button class="btn-vip" onclick="loadContent('upgrade.php')">Nâng cấp tài khoản</button>
+                    <?php endif; ?>
                     
                     <div class="settings-wrapper">
                         <button class="btn-setting" id="btn-open-settings"><i class="fa-solid fa-gear"></i></button>
@@ -429,14 +632,17 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
                                 <div class="settings-divider"></div>
                                 <li onclick="openHelpCenter('help-about')"><i class="fa-solid fa-circle-info"></i> <span class="menu-text">Giới thiệu</span></li>
                                 <li onclick="openHelpCenter('help-terms')"><i class="fa-regular fa-file-lines"></i> <span class="menu-text">Thỏa thuận sử dụng dịch vụ</span> <i class="fa-solid fa-arrow-up-right-from-square menu-arrow"></i></li>
-<li onclick="openHelpCenter('help-privacy')"><i class="fa-solid fa-shield-halved"></i> <span class="menu-text">Chính sách bảo mật</span> <i class="fa-solid fa-arrow-up-right-from-square menu-arrow"></i></li>
+                                <li onclick="openHelpCenter('help-privacy')"><i class="fa-solid fa-shield-halved"></i> <span class="menu-text">Chính sách bảo mật</span> <i class="fa-solid fa-arrow-up-right-from-square menu-arrow"></i></li>
                                 <li onclick="openHelpCenter('help-copyright')"><i class="fa-regular fa-flag"></i> <span class="menu-text">Báo cáo vi phạm bản quyền</span> <i class="fa-solid fa-arrow-up-right-from-square menu-arrow"></i></li>
                                 <li onclick="openHelpCenter('help-ads')"><i class="fa-solid fa-ad"></i> <span class="menu-text">Quảng cáo</span> <i class="fa-solid fa-arrow-up-right-from-square menu-arrow"></i></li>
                                 <li onclick="openHelpCenter('help-contact')"><i class="fa-solid fa-phone"></i> <span class="menu-text">Liên hệ</span> <i class="fa-solid fa-arrow-up-right-from-square menu-arrow"></i></li>
                             </ul>
                         </div>
                     </div>
-                    <button class="btn-avatar"><i class="fa-solid fa-user"></i></button>
+                    
+                    <button class="btn-avatar" onclick="toggleAvatarDropdown()">
+                        <img src="<?php echo isset($avatarPath) ? $avatarPath : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; ?>" id="headerAvatarImg" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='<?php echo isset($defaultAvatarPath) ? $defaultAvatarPath : 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; ?>'">
+                    </button>
                 </div>
             </header>
             <div class="page-content" id="main-content-area"></div>
@@ -444,6 +650,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
     </div>
 
     
+    <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin'): ?>
     <footer class="player">
         <div class="player-left">
             <div class="song-thumb"></div>
@@ -475,6 +682,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
             </div>
         </div>
     </footer>
+    <?php endif; ?>
     
 
     <div id="loginModal" class="modal-overlay">
@@ -522,6 +730,43 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
             </div>
         </div>
     </div>
+    
+    <div id="adminCreatePlModal" class="modal-overlay" style="z-index: 2500;">
+    <div class="modal-content" style="width: 350px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;">
+        <h3 style="color: white; margin-bottom: 20px; font-size: 18px;">Tạo playlist mẫu (Admin)</h3>
+        
+        <input type="text" id="adminPlTitleInput" placeholder="Nhập tên playlist mẫu..." 
+               style="width: 100%; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; margin-bottom: 25px; outline: none; text-align: center; font-size: 14px;">
+        
+        <div style="display: flex; justify-content: space-between; gap: 10px;">
+            <button onclick="document.getElementById('adminCreatePlModal').style.display='none'" 
+                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: 600;">Hủy</button>
+            
+            <button onclick="submitAdminCreatePlaylist()" 
+                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: var(--purple-primary); color: white; cursor: pointer; font-weight: 600;">TẠO MỚI</button>
+        </div>
+    </div>
+</div>
+
+    <div id="adminEditPlModal" class="modal-overlay" style="z-index: 2500;">
+    <div class="modal-content" style="width: 350px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;">
+        <h3 style="color: white; margin-bottom: 20px; font-size: 18px;">Chỉnh sửa Playlist mẫu</h3>
+        
+        <input type="hidden" id="editPlId"> 
+        
+        <input type="text" id="editPlTitleInput" placeholder="Nhập tên mới..." 
+               style="width: 100%; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; margin-bottom: 25px; outline: none; text-align: center; font-size: 14px;">
+        
+        <div style="display: flex; justify-content: space-between; gap: 10px;">
+            <button onclick="document.getElementById('adminEditPlModal').style.display='none'" 
+                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: 600;">Hủy</button>
+            
+            <button onclick="submitAdminEditPlaylist()" 
+                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: 600;">LƯU THAY ĐỔI</button>
+        </div>
+    </div>
+</div>
+
 
     <script>
         function checkAndCreatePlaylist() {
@@ -628,8 +873,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         const isLoggedIn = <?php echo isset($_SESSION['username']) ? 'true' : 'false'; ?>;
         const userInfo = {
             username: '<?php echo isset($_SESSION['username']) ? addslashes($_SESSION['username']) : ''; ?>',
-            email: '<?php echo isset($_SESSION['email']) ? addslashes($_SESSION['email']) : ''; ?>',
-            role: '<?php echo isset($_SESSION['role']) ? addslashes($_SESSION['role']) : ''; ?>'
+            role: '<?php echo isset($_SESSION['role']) ? $_SESSION['role'] : ''; ?>' // Thêm dòng này để JS biết bạn là Admin
         };
 
         function openLoginModal() { document.getElementById('registerModal').style.display = 'none'; document.getElementById('loginModal').style.display = 'flex'; }
@@ -643,10 +887,10 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         }
 
         function toggleAvatarDropdown() {
-            if (!isLoggedIn) { openLoginModal(); return; }
-            document.getElementById('avatarName').textContent = userInfo.username;
-            document.getElementById('avatarEmail').textContent = userInfo.email || '---';
-            document.getElementById('avatarRole').textContent = userInfo.role || 'user';
+            if (!isLoggedIn) {
+                openLoginModal();
+                return;
+            }
             avatarDropdown.classList.toggle('show');
         }
 
@@ -809,9 +1053,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
 
         document.addEventListener('DOMContentLoaded', () => {
             if(userInfo.username) { const welcome = document.getElementById('welcomeBox'); welcome.textContent = "Chào mừng trở lại, " + userInfo.username; welcome.classList.add('show'); setTimeout(() => welcome.classList.remove('show'), 3000); }
-            document.querySelector('.btn-avatar').addEventListener('click', () => { if(!userInfo.username) { openLoginModal(); return; } document.getElementById('avatarName').textContent = userInfo.username; document.getElementById('avatarRole').textContent = userInfo.role; document.getElementById('avatarDropdown').classList.toggle('show'); });
             
-            /* ================= BƯỚC 3: JAVASCRIPT XỬ LÝ MENU CÀI ĐẶT THÊM VÀO ĐÂY ================= */
             const btnSettings = document.getElementById('btn-open-settings');
             const menuSettings = document.getElementById('settings-dropdown');
 
@@ -819,13 +1061,16 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
                 btnSettings.addEventListener('click', function(e) {
                     e.stopPropagation(); 
                     menuSettings.classList.toggle('show');
+                    // Đóng menu avatar nếu đang mở
+                    const avatarDropdown = document.getElementById('avatarDropdown');
+                    if(avatarDropdown) avatarDropdown.classList.remove('show');
                 });
             }
 
             // Script mở Trung tâm Hỗ trợ & Chuyển Tab
             window.openHelpCenter = function(tabId) {
                 document.getElementById('settings-dropdown').classList.remove('show'); // Ẩn menu đi
-                document.getElementById('helpCenterModal').style.display = 'block'; // Mở full màn hình
+                document.getElementById('helpCenterModal').style.display = 'flex'; // Mở full màn hình
                 switchHelpTab(tabId); // Bật đúng tab được chọn
             };
 
@@ -846,53 +1091,140 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
 
             // Cập nhật sự kiện click ra ngoài để đóng
             window.onclick = (e) => { 
-                // Đóng các Modal văn bản (Thỏa thuận, Chính sách, Modal Đăng nhập)
-                if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('doc-modal-overlay')) {
+                // Đóng các Modal văn bản (Modal Đăng nhập)
+                if (e.target.classList.contains('modal-overlay')) {
                     e.target.style.display = 'none'; 
                 }
                 
-                // Đóng menu avatar
-                if (!e.target.closest('.btn-avatar') && !e.target.closest('#avatarDropdown')) {
-                    document.getElementById('avatarDropdown').classList.remove('show'); 
+                // Đóng menu avatar nếu click ra ngoài
+                const avatarDropdown = document.getElementById('avatarDropdown');
+                if (avatarDropdown && !e.target.closest('.btn-avatar') && !e.target.closest('#avatarDropdown')) {
+                    avatarDropdown.classList.remove('show'); 
                 }
 
                 // Đóng menu Cài đặt nếu click ra ngoài
-                const btnSettings = document.getElementById('btn-open-settings');
-                const menuSettings = document.getElementById('settings-dropdown');
                 if (menuSettings && menuSettings.classList.contains('show')) {
                     if (!menuSettings.contains(e.target) && !btnSettings.contains(e.target)) {
                         menuSettings.classList.remove('show');
                     }
                 }
             };
-            /* ================= KẾT THÚC BƯỚC 3 ================= */
 
+            // XỬ LÝ VIỆC ĐỔI ẢNH ĐẠI DIỆN VÀ LƯU VÀO CSDL
+            const changeAvatarInput = document.getElementById('changeAvatarInput');
+            if (changeAvatarInput) {
+                changeAvatarInput.addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const formData = new FormData();
+                        formData.append('action', 'update_avatar');
+                        formData.append('avatar', file);
+
+                        fetch('user_action.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.success) {
+                                // Cập nhật ảnh ở cả 2 vị trí ngay lập tức mà không cần F5
+                                document.getElementById('headerAvatarImg').src = data.avatar_url;
+                                document.getElementById('dropdownAvatarImg').src = data.avatar_url;
+                                showGlobalNotify('Cập nhật ảnh đại diện thành công!', true);
+                            } else {
+                                showGlobalNotify(data.message || 'Lỗi cập nhật ảnh!', false);
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            showGlobalNotify('Lỗi kết nối máy chủ!', false);
+                        });
+                    }
+                });
+            }
             if (userInfo.role === 'admin') loadContent('admin_dashboard.php'); else loadContent('discover.php');
             const mainApp = document.querySelector('.app');
             mainApp.addEventListener('click', function(e) { const menuItem = e.target.closest('.menu-item'); if (menuItem) { document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active')); menuItem.classList.add('active'); } });
         });
+        // 1. Hàm này chỉ để mở cái khung Modal lên
+// --- THAY THẾ ĐOẠN TẠO PLAYLIST BẰNG ĐOẠN NÀY ---
+window.openAdminCreatePlaylist = function() {
+    console.log("Đang mở Modal tạo playlist mẫu...");
+    const modal = document.getElementById('adminCreatePlModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.getElementById('adminPlTitleInput').value = ''; 
+        document.getElementById('adminPlTitleInput').focus();   
+    } else {
+        alert("Lỗi: Không tìm thấy khung adminCreatePlModal trong index.php! Vy kiểm tra lại dòng 666 nhé.");
+    }
+};
+
+window.submitAdminCreatePlaylist = function() {
+    const title = document.getElementById('adminPlTitleInput').value.trim();
+    console.log("Tên playlist Admin nhập: " + title);
+    
+    if (title === "") {
+        showGlobalNotify("Vui lòng nhập tên playlist!", false);
+        return;
+    }
+
+    fetch('user_action.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'action=create_playlist&title=' + encodeURIComponent(title)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            document.getElementById('adminCreatePlModal').style.display = 'none';
+            showGlobalNotify(data.message, true);
+            loadContent('admin_playlists.php'); 
+        } else {
+            showGlobalNotify(data.message, false);
+        }
+    })
+    .catch(err => {
+        console.error("Lỗi hệ thống:", err);
+        showGlobalNotify("Lỗi kết nối máy chủ!", false);
+    });
+};
+let currentEditId = 0;
+
+function openAdminEditPlaylist(id, title) {
+    currentEditId = id;
+    document.getElementById('adminEditPlModal').style.display = 'flex';
+    document.getElementById('editPlTitleInput').value = title;
+    document.getElementById('editPlTitleInput').focus();
+}
+
+function submitAdminEditPlaylist() {
+    const newTitle = document.getElementById('editPlTitleInput').value.trim();
+    if (newTitle === "") {
+        showGlobalNotify("Tên không được để trống!", false);
+        return;
+    }
+
+    fetch('user_action.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=edit_playlist&playlist_id=${currentEditId}&title=${encodeURIComponent(newTitle)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            document.getElementById('adminEditPlModal').style.display = 'none';
+            showGlobalNotify(data.message, true);
+            loadContent('admin_playlists.php'); // Tải lại bảng
+        } else {
+            showGlobalNotify(data.message, false);
+        }
+    });
+}
     </script>
     <script src="player.js?v=<?php echo time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-   
-    <style>
-        .lyric-panel { position: fixed; top: 100vh; left: 0; width: 100vw; height: calc(100vh - 90px); background: #170f23; z-index: 999; transition: top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); display: flex; overflow: hidden; }
-        .lyric-panel.show { top: 0; }
-        .lyric-bg-blur { position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; filter: blur(60px) brightness(0.4); background-size: cover; background-position: center; z-index: -1; transition: 1s; }
-        .lyric-close-btn { position: absolute; top: 30px; right: 40px; font-size: 30px; color: white; cursor: pointer; z-index: 1000; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
-        .lyric-close-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
-        
-        .lyric-left { width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
-        .lyric-left img { width: 100%; max-width: 280px; aspect-ratio: 1/1; object-fit: cover; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); margin-bottom: 25px; transition: 0.5s; }
-        .lyric-left h2 { color: white; font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 10px; }
-        .lyric-left p { color: rgba(255,255,255,0.6); font-size: 16px; text-align: center; }
-        
-        .lyric-right { width: 60%; height: 100%; overflow-y: auto; scroll-behavior: smooth; padding: 100px 50px 200px 20px; scrollbar-width: none; }
-        .lyric-right::-webkit-scrollbar { display: none; }
-        .lyric-line { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.3); margin-bottom: 25px; transition: all 0.3s; cursor: pointer; transform-origin: left center; }
-        .lyric-line.active { color: #fff; font-size: 32px; text-shadow: 0 0 15px rgba(255,255,255,0.4); transform: scale(1.02); }
-    </style>
-
+    
     <div id="lyricPanel" class="lyric-panel">
         <div id="lyricBgBlur" class="lyric-bg-blur"></div>
         <div class="lyric-close-btn" onclick="closeLyricPanel()"><i class="fa-solid fa-chevron-down"></i></div>
@@ -906,159 +1238,13 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         <div class="lyric-right" id="lyricContainer">
             </div>
     </div>
-<!-- phần setting -->
-        <div id="aboutModal" class="modal-overlay" style="z-index: 3000;">
-        <div class="modal-content" style="background: #28104e; width: 450px; padding: 40px 30px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
-            <div style="margin-bottom: 25px; display: flex; justify-content: center; align-items: baseline; gap: 2px;">
-                <span style="font-size: 35px; font-weight: 900; color: white; letter-spacing: -1px;">lyrx</span>
-                <span style="color: var(--purple-primary); font-size: 45px; line-height: 0;">.</span><span style="font-size: 14px; font-weight: 700; color: var(--purple-primary); text-transform: uppercase; letter-spacing: 2px;">music</span>
-            </div>
-            <p style="color: white; font-size: 14px; line-height: 1.6; margin-bottom: 20px; font-weight: 500;">
-                Giấy phép mạng xã hội: 157/GP-BTTTT do Bộ Thông tin và Truyền thông cấp ngày 12/04/2026
-            </p>
-            <p style="color: var(--text-secondary); font-size: 13px; line-height: 1.8; margin-bottom: 30px;">
-                Chủ quản: Dự án Lyrx Music.<br>
-                GCN ĐKDN: 0303490096 do sở KH & ĐT cấp ngày 12/04/2026.<br>
-                Địa chỉ: Phường Đông Xuyên, TP. Long Xuyên, Tỉnh An Giang, Việt Nam.
-            </p>
-            <button onclick="document.getElementById('aboutModal').style.display='none'" style="width: 100%; padding: 12px; background: var(--purple-primary); color: white; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">ĐÓNG</button>
-        </div>
-    </div>
-
-    <div id="termsModal" class="doc-modal-overlay">
-        <div class="doc-modal-container">
-            <div class="doc-modal-header">
-                <h2>Thỏa Thuận Cung Cấp Và Sử Dụng Dịch Vụ Mạng Xã Hội Lyrx Music</h2>
-                <span class="doc-btn-close" onclick="document.getElementById('termsModal').style.display='none'">&times;</span>
-            </div>
-            <div class="doc-modal-body">
-                <h3>Điều 1: Giải thích từ ngữ</h3>
-                <p><b>Lyrx Music (Zing MP3):</b> là dịch vụ mạng xã hội do Công ty Cổ phần Tập đoàn VNG là chủ quản có thể truy cập qua website, ứng dụng hoặc bất kỳ cách truy cập khả dụng nào khác.</p>
-                <p><b>Thỏa Thuận:</b> là thỏa thuận cung cấp và sử dụng dịch vụ mạng xã hội, cùng với tất cả các bản sửa đổi, bổ sung, cập nhật.</p>
-                <p><b>VNG:</b> là Công ty Cổ phần Tập đoàn VNG.</p>
-                <p><b>Thông Tin Cá Nhân:</b> là thông tin gắn liền với việc xác định danh tính, nhân thân của cá nhân bao gồm tên, tuổi, địa chỉ, số chứng minh nhân dân, số điện thoại, địa chỉ thư điện tử, tài khoản ngân hàng của Người Sử Dụng và một số thông tin khác theo quy định của pháp luật.</p>
-                <p><b>Zalo ID / Lyrx ID:</b> là tài khoản để Người Sử Dụng đăng nhập, upload nội dung lên và sử dụng các tính năng nâng cao khác.</p>
-                <p><b>Người Sử Dụng:</b> là bên truy cập mạng xã hội không phụ thuộc có hay không có tài khoản đăng nhập.</p>
-                <p><b>Sở Hữu Trí Tuệ:</b> là những sáng chế, cải tiến, thiết kế, quy trình, công thức, phương pháp, cơ sở dữ liệu, thông tin, bản vẽ, mã, chương trình máy tính, tác phẩm có bản quyền (hiện tại và tương lai), thiết kế mạch tích hợp bán dẫn, thương hiệu, nhãn hiệu (dù đã đăng ký hay chưa đăng ký) tên thương mại và (thiết kế) bao bì thương phẩm.</p>
-
-                <h3>Điều 2: Nội dung dịch vụ</h3>
-                <p>Lyrx Music là mạng xã hội chia sẻ thông tin về âm nhạc, cho phép nghe nhạc trực tuyến, xem video clip, music video (MV) bao gồm nhiều thể loại khác nhau và/hoặc những nội dung khác được Người Sử Dụng đăng tải.</p>
-                <p>Thông qua mạng xã hội, chủ thể bản quyền có thể để đăng tải bài hát / video clip, MV chất lượng để truyền đạt tới Người Sử Dụng.</p>
-                <p>Người Sử Dụng có thể nghe trực tuyến hoặc tải về từ website hoặc từ ứng dụng được phát triển trên nền tảng di động.</p>
-                <p>Mạng xã hội cho phép Người Sử Dụng trao đổi, thảo luận và phản hồi thông qua công cụ bình luận bằng kí tự chữ về những nội dung được cung cấp.</p>
-                <p>Thông qua Lyrx Music, hệ thống cung cấp dịch vụ quảng cáo trên Wesite và/hoặc trên ứng dụng phát triển trên thiết bị di động.</p>
-
-                <h3>Điều 3: Chấp nhận điều khoản sử dụng và sửa đổi</h3>
-                <p>Khi sử dụng Dịch vụ, Người Sử Dụng mặc định phải đồng ý và tuân theo các điều khoản được quy định tại Thỏa Thuận này và quy định, quy chế mà hệ thống liên kết, tích hợp.</p>
-                <p>Để đáp ứng nhu cầu sử dụng của Người Sử Dụng, hệ thống không ngừng hoàn thiện và phát triển, vì vậy các điều khoản quy định tại Thỏa thuận này có thể được cập nhật, chỉnh sửa bất cứ lúc nào mà không cần phải thông báo trước tới Người Sử Dụng. Hệ thống sẽ công bố rõ trên Website về những thay đổi, bổ sung đó.</p>
-
-                <h3>Điều 4: Đăng ký tài khoản và sử dụng dịch vụ</h3>
-                <p>Người Sử Dụng phải đủ năng lực hành vi dân sự và đủ 13 tuổi trở lên mới được phép đăng ký tài khoản và/hoặc sử dụng dịch vụ.</p>
-                <p>Khách hàng sử dụng tài khoản để truy cập. Một số tính năng yêu cầu Người Sử Dụng phải đăng ký, đăng nhập để sử dụng. Nếu không đăng ký, đăng nhập thì chỉ sử dụng với các tính năng thông thường.</p>
-                <p>Trên Website xuất hiện link website, hoặc biểu tượng website khác, việc truy cập tới các trang này khác hoàn toàn có thể gặp rủi ro, nguy hiểm. Người Sử Dụng hoàn toàn chịu trách nhiệm rủi ro khi sử dụng website liên kết này.</p>
-                
-                <h3>Điều 5. Các nội dung cấm trao đổi và chia sẻ trên mạng xã hội</h3>
-                <p>Khi sử dụng sản phẩm, nghiêm cấm khách hàng một số hành vi bao gồm nhưng không giới hạn sau:</p>
-                <ul>
-                    <li>Lợi dụng việc cung cấp, trao đổi, sử dụng thông tin nhằm mục đích: Chống lại Nhà nước; gây phương hại đến an ninh quốc gia; Tuyên truyền, kích động bạo lực, dâm ô, đồi trụy; Tuyệt đối không bàn luận, đăng tải các nội dung về các vấn đề chính trị.</li>
-                    <li>Tiết lộ bí mật nhà nước, bí mật quân sự, an ninh, kinh tế.</li>
-                    <li>Khi giao tiếp với người dùng khác, quấy rối, chửi bới, làm phiền hay có bất kỳ hành vi thiếu văn hoá.</li>
-                    <li>Đưa thông tin xuyên tạc, vu khống, nhạo báng, xúc phạm uy tín tới tổ chức, cá nhân dưới bất kỳ hình thức nào.</li>
-                    <li>Sử dụng trái phép mật khẩu, khoá mật mã của các tổ chức, cá nhân, thông tin riêng, thông tin cá nhân.</li>
-                    <li>Xâm phạm bản quyền, sao chép, tải về, phân phối nội dung khi chưa được sự đồng ý của chủ sở hữu.</li>
-                </ul>
-
-                <h3>Điều 6. Nội dung cung cấp trao đổi thông tin</h3>
-                <p>Khi đăng kí sử dụng dịch vụ, Người Sử Dụng có thể upload nội dung. Nội dụng upload lên phải phù hợp với thể loại, tiêu chuẩn mà hệ thống cho phép.</p>
-                <p>Người Sử Dụng phải chịu trách nhiệm về nội dung của việc đăng tải. Khẳng định và đảm bảo rằng mình sở hữu hoặc/và được sự đồng ý của chủ sở hữu về nội dung mà mình đăng tải.</p>
-                <p>Hệ thống không chứng thực bất kỳ nội dung nào được đăng tải bởi Người Sử Dụng. Chúng tôi không cho phép các hoạt động vi phạm bản quyền và xâm phạm quyền sở hữu trí tuệ, và sẽ chủ động loại bỏ tất cả các nội dung vi phạm mà không cần báo trước.</p>
-                
-                <h3>Điều 7. Sử dụng dịch vụ tính phí</h3>
-                <p>Hệ thống cung cấp các gói dịch vụ tính phí (“Gói VIP”) cho phép người sử dụng tiếp cận các tính năng ưu đãi vượt trội so với dịch vụ miễn phí thông thường.</p>
-                <p><b>Phí và thanh toán:</b> Phí công bố cho từng Gói VIP đã bao gồm toàn bộ các loại thuế, lệ phí. Ngay khi khoản thanh toán được chấp thuận thì Gói VIP tương ứng được kích hoạt.</p>
-                <p><b>Tự động gia hạn:</b> Đối với một số Gói VIP được áp dụng tính năng tự động gia hạn, trong vòng 24 giờ trước khi hết thời hạn sử dụng, tính năng này sẽ tự kích hoạt thêm 1 chu kỳ sử dụng nữa.</p>
-                <p><b>Thay đổi:</b> Các thay đổi về mức phí sẽ được thông báo công khai trên website, ứng dụng.</p>
-
-                <h3>Điều 8. Quyền và trách nhiệm của chủ tài khoản</h3>
-                <p>Người Sử Dụng có trách nhiệm bảo mật thông tin tài khoản, nếu những thông tin trên bị tiết lộ dưới bất kỳ hình thức nào thì Người Sử Dụng phải chấp nhận những rủi ro phát sinh.</p>
-                <p>Người Sử Dụng đồng ý sẽ thông báo ngay cho hệ thống về bất kỳ trường hợp nào sử dụng trái phép tài khoản và mật khẩu của bạn.</p>
-                <p>Chúng tôi có quyền ngay lập tức chấm dứt hoặc khóa tài khoản của bạn ở bất kỳ thời điểm nào mà không cần thông báo nếu xác định rằng bạn đã vi phạm các Điều khoản sử dụng.</p>
-                
-                <h3>Điều 9. Quyền và trách nhiệm của VNG (Đơn vị chủ quản)</h3>
-                <p>Trong quá trình sử dụng sản phẩm, nếu bạn vi phạm bất cứ điều khoản nào, chúng tôi có toàn quyền chấm dứt, xóa bỏ tài khoản của bạn mà không cần sự đồng ý.</p>
-                <p>Có trách nhiệm bảo mật thông tin cá nhân của chủ tài khoản, không bán hoặc trao đổi những thông tin này với bên thứ 3, trừ trường hợp theo quy định pháp luật.</p>
-                <p>Nhận và giải quyết khiếu nại của khách hàng các trường hợp phát sinh trong quá trình sử dụng sản phẩm đối với tài khoản đăng ký đầy đủ thông tin trung thực.</p>
-            </div>
-        </div>
-    </div>
-
-    <div id="privacyModal" class="doc-modal-overlay">
-        <div class="doc-modal-container">
-            <div class="doc-modal-header">
-                <h2>Chính Sách Bảo Mật Thông Tin</h2>
-                <span class="doc-btn-close" onclick="document.getElementById('privacyModal').style.display='none'">&times;</span>
-            </div>
-            <div class="doc-modal-body">
-                <p>Chúng tôi luôn cam kết bảo mật những thông tin, dữ liệu cá nhân của Khách hàng một cách tốt nhất theo quy định của pháp luật. Vì vậy, Chính sách Bảo vệ Dữ liệu cá nhân ("Chính sách") này được xây dựng để Khách hàng hiểu rõ hơn về mục đích, phạm vi thông tin mà chúng tôi xử lý dữ liệu cá nhân.</p>
-                <p>Chính sách này là một phần không thể tách rời của bản Hợp đồng, các Điều khoản và Điều kiện sử dụng Dịch vụ cung cấp tới Khách hàng.</p>
-
-                <h3>Điều 1. Định nghĩa</h3>
-                <ul>
-                    <li><b>Đơn vị quản lý:</b> là đơn vị chủ quản dự án.</li>
-                    <li><b>Khách hàng:</b> là Khách hàng cá nhân đăng ký, sử dụng dịch vụ.</li>
-                    <li><b>Dữ liệu cá nhân:</b> là thông tin dưới dạng ký hiệu, chữ viết, chữ số, hình ảnh, âm thanh... gắn liền với một con người cụ thể.</li>
-                    <li><b>Xử lý dữ liệu cá nhân:</b> là một hoặc nhiều hoạt động tác động tới dữ liệu như: thu thập, ghi, phân tích, xác nhận, lưu trữ, chỉnh sửa, xóa, hủy dữ liệu.</li>
-                </ul>
-
-                <h3>Điều 2. Loại Dữ liệu được xử lý</h3>
-                <p>Các Dữ liệu cá nhân của Khách hàng có thể được thu thập và xử lý bao gồm:</p>
-                <ul>
-                    <li>Thông tin cá nhân: họ tên, số điện thoại, ngày tháng năm sinh... để liên lạc và khôi phục tài khoản.</li>
-                    <li>Tên tài khoản, ảnh đại diện.</li>
-                    <li>Thông tin về ứng dụng, trình duyệt và thiết bị sử dụng (IP, địa chỉ Wifi MAC, hệ điều hành).</li>
-                    <li>Thông tin được bạn chia sẻ để tối ưu hóa nội dung hiển thị nhằm phục vụ tốt hơn.</li>
-                </ul>
-                <p>Bạn có trách nhiệm cung cấp đầy đủ, chính xác Dữ Liệu Cá Nhân của mình và đồng ý không cung cấp thông tin gây hiểu nhầm.</p>
-
-                <h3>Điều 3. Mục đích Xử lý dữ liệu cá nhân</h3>
-                <p>Khách hàng đồng ý cho phép Xử lý dữ liệu cá nhân với các mục đích như sau:</p>
-                <ul>
-                    <li>Để quản lý, điều hành, cung cấp Dịch vụ và tài khoản người dùng của Bạn.</li>
-                    <li>Để giải quyết hoặc tạo điều kiện dịch vụ khách hàng, trả lời thắc mắc.</li>
-                    <li>Để tiến hành các hoạt động nghiên cứu, phân tích và phát triển, cải thiện trải nghiệm khách hàng.</li>
-                    <li>Vì mục đích tiếp thị, gửi thông tin và tài liệu quảng bá liên quan đến các sản phẩm/dịch vụ.</li>
-                    <li>Để ngăn chặn hoặc điều tra hành vi vi phạm Điều Khoản Dịch Vụ, hoạt động gian lận, phi pháp.</li>
-                </ul>
-
-                <h3>Điều 4. Cách thức Xử lý dữ liệu</h3>
-                <p>Chúng tôi có thể thu thập dữ liệu cá nhân của Khách hàng qua các cách: Khi Bạn đăng ký dịch vụ, gửi biểu mẫu, thực hiện giao dịch, cung cấp ý kiến phản hồi, tham gia khảo sát.</p>
-                <p>Bảo vệ và lưu trữ: Dữ liệu cá nhân được lưu trữ đằng sau các mạng bảo mật và chỉ có thể được truy cập bởi nhân viên có quyền đặc biệt. Dữ liệu sẽ được hủy hoặc xóa khi không còn phục vụ mục đích thu thập hoặc không còn cần thiết cho kinh doanh/pháp lý.</p>
-
-                <h3>Điều 5. Chia sẻ Dữ liệu cá nhân</h3>
-                <p>Trong quá trình hoạt động, Chúng tôi có thể cần tiết lộ dữ liệu cá nhân cho nhà cung cấp dịch vụ bên thứ ba, đại lý, đối tác vì một hay nhiều Mục Đích đã nêu, ví dụ như công ty cung cấp dịch vụ máy chủ, phân tích dữ liệu.</p>
-
-                <h3>Điều 6. Xử lý dữ liệu cá nhân của trẻ em</h3>
-                <p>Đối với trẻ em dưới 16 tuổi, việc tạo tài khoản, sử dụng Dịch vụ cần được sự cho phép và giám sát của cha/mẹ hoặc người giám hộ hợp pháp. Chúng tôi sẽ gỡ và/hoặc xóa bất kỳ dữ liệu cá nhân nào được gửi bởi trẻ em dưới 16 tuổi mà không có sự đồng ý của phụ huynh.</p>
-
-                <h3>Điều 7. Quyền của Khách hàng</h3>
-                <p>Khách hàng là chủ thể dữ liệu cá nhân của mình và có các quyền:</p>
-                <ul>
-                    <li>Quyền được biết về hoạt động xử lý dữ liệu.</li>
-                    <li>Quyền đồng ý hoặc không đồng ý cho phép xử lý dữ liệu.</li>
-                    <li>Quyền truy cập để xem, chỉnh sửa hoặc yêu cầu xóa Dữ liệu cá nhân của mình.</li>
-                    <li>Quyền rút lại sự đồng ý tại bất kỳ thời điểm nào.</li>
-                </ul>
-
-                <h3>Điều 8. Liên hệ</h3>
-                <p>Nếu Bạn có bất kỳ thắc mắc hoặc câu hỏi nào về Chính Sách này, vui lòng liên hệ với Chúng tôi tại địa chỉ Email hỗ trợ khách hàng của hệ thống: hotro@lyrxmusic.com.vn.</p>
-            </div>
-        </div>
-    </div>
 
     <div id="helpCenterModal" class="help-modal-overlay">
         <div class="help-container">
             <div class="help-sidebar">
                 <div class="help-tab-btn" data-target="help-about" onclick="switchHelpTab('help-about')">Giới thiệu</div>
+                <div class="help-tab-btn" data-target="help-terms" onclick="switchHelpTab('help-terms')">Thỏa thuận sử dụng</div>
+                <div class="help-tab-btn" data-target="help-privacy" onclick="switchHelpTab('help-privacy')">Chính sách bảo mật</div>
                 <div class="help-tab-btn" data-target="help-copyright" onclick="switchHelpTab('help-copyright')">Bản quyền</div>
                 <div class="help-tab-btn" data-target="help-ads" onclick="switchHelpTab('help-ads')">Quảng cáo</div>
                 <div class="help-tab-btn" data-target="help-contact" onclick="switchHelpTab('help-contact')">Liên hệ</div>
@@ -1078,6 +1264,85 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
                     <p style="line-height: 1.8; font-size: 15px; color: #444; text-align: justify; font-weight: bold;">
                         Lyrx Music là một sản phẩm của Tập đoàn VNG.
                     </p>
+                </div>
+
+                <div id="help-terms" class="help-panel">
+                    <h2 style="font-size: 28px; margin-bottom: 20px; font-weight: 700; color: #333;">Thỏa Thuận Cung Cấp Và Sử Dụng Dịch Vụ</h2>
+                    <div style="font-size: 15px; line-height: 1.8; color: #444; text-align: justify; max-width: 900px;">
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 1: Giải thích từ ngữ</h3>
+                        <p style="margin-bottom: 12px;"><b>Lyrx Music:</b> là dịch vụ mạng xã hội do Công ty Cổ phần Tập đoàn VNG là chủ quản có thể truy cập qua website, ứng dụng hoặc bất kỳ cách truy cập khả dụng nào khác.</p>
+                        <p style="margin-bottom: 12px;"><b>Thỏa Thuận:</b> là thỏa thuận cung cấp và sử dụng dịch vụ mạng xã hội, cùng với tất cả các bản sửa đổi, bổ sung, cập nhật.</p>
+                        <p style="margin-bottom: 12px;"><b>Thông Tin Cá Nhân:</b> là thông tin gắn liền với việc xác định danh tính, nhân thân của cá nhân bao gồm tên, tuổi, địa chỉ, số chứng minh nhân dân, số điện thoại, địa chỉ thư điện tử, tài khoản ngân hàng của Người Sử Dụng và một số thông tin khác theo quy định của pháp luật.</p>
+                        <p style="margin-bottom: 12px;"><b>Lyrx ID:</b> là tài khoản để Người Sử Dụng đăng nhập, upload nội dung lên và sử dụng các tính năng nâng cao khác.</p>
+                        
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 2: Nội dung dịch vụ</h3>
+                        <p style="margin-bottom: 12px;">Lyrx Music là mạng xã hội chia sẻ thông tin về âm nhạc, cho phép nghe nhạc trực tuyến, xem video clip, music video (MV) bao gồm nhiều thể loại khác nhau và/hoặc những nội dung khác được Người Sử Dụng đăng tải.</p>
+                        <p style="margin-bottom: 12px;">Thông qua mạng xã hội, chủ thể bản quyền có thể để đăng tải bài hát / video clip, MV chất lượng để truyền đạt tới Người Sử Dụng.</p>
+                        <p style="margin-bottom: 12px;">Mạng xã hội cho phép Người Sử Dụng trao đổi, thảo luận và phản hồi thông qua công cụ bình luận bằng kí tự chữ về những nội dung được cung cấp.</p>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 3: Chấp nhận điều khoản sử dụng và sửa đổi</h3>
+                        <p style="margin-bottom: 12px;">Khi sử dụng Dịch vụ, Người Sử Dụng mặc định phải đồng ý và tuân theo các điều khoản được quy định tại Thỏa Thuận này và quy định, quy chế mà hệ thống liên kết, tích hợp.</p>
+                        <p style="margin-bottom: 12px;">Để đáp ứng nhu cầu sử dụng của Người Sử Dụng, hệ thống không ngừng hoàn thiện và phát triển, vì vậy các điều khoản quy định tại Thỏa thuận này có thể được cập nhật, chỉnh sửa bất cứ lúc nào mà không cần phải thông báo trước tới Người Sử Dụng. Hệ thống sẽ công bố rõ trên Website về những thay đổi, bổ sung đó.</p>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 4: Các nội dung cấm trao đổi và chia sẻ</h3>
+                        <p style="margin-bottom: 12px;">Khi sử dụng sản phẩm, nghiêm cấm khách hàng một số hành vi bao gồm nhưng không giới hạn sau:</p>
+                        <ul style="margin-left: 25px; margin-bottom: 12px;">
+                            <li style="margin-bottom: 8px;">Lợi dụng việc cung cấp, trao đổi, sử dụng thông tin nhằm mục đích: Chống lại Nhà nước; gây phương hại đến an ninh quốc gia; Tuyên truyền, kích động bạo lực, dâm ô, đồi trụy. Tuyệt đối không bàn luận, đăng tải các nội dung về các vấn đề chính trị.</li>
+                            <li style="margin-bottom: 8px;">Tiết lộ bí mật nhà nước, bí mật quân sự, an ninh, kinh tế.</li>
+                            <li style="margin-bottom: 8px;">Khi giao tiếp với người dùng khác, quấy rối, chửi bới, làm phiền hay có bất kỳ hành vi thiếu văn hoá.</li>
+                            <li style="margin-bottom: 8px;">Đưa thông tin xuyên tạc, vu khống, nhạo báng, xúc phạm uy tín tới tổ chức, cá nhân dưới bất kỳ hình thức nào.</li>
+                            <li style="margin-bottom: 8px;">Xâm phạm bản quyền, sao chép, tải về, phân phối nội dung khi chưa được sự đồng ý của chủ sở hữu.</li>
+                        </ul>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 5: Sử dụng dịch vụ tính phí</h3>
+                        <p style="margin-bottom: 12px;">Hệ thống cung cấp các gói dịch vụ tính phí (“Gói VIP”) cho phép người sử dụng tiếp cận các tính năng ưu đãi vượt trội so với dịch vụ miễn phí thông thường. Phí công bố cho từng Gói VIP đã bao gồm toàn bộ các loại thuế, lệ phí. Ngay khi khoản thanh toán được chấp thuận thì Gói VIP tương ứng được kích hoạt.</p>
+                        <p style="margin-bottom: 12px;">Đối với một số Gói VIP được áp dụng tính năng tự động gia hạn, trong vòng 24 giờ trước khi hết thời hạn sử dụng, tính năng này sẽ tự kích hoạt thêm 1 chu kỳ sử dụng nữa.</p>
+                    </div>
+                </div>
+
+                <div id="help-privacy" class="help-panel">
+                    <h2 style="font-size: 28px; margin-bottom: 20px; font-weight: 700; color: #333;">Chính Sách Bảo Mật Thông Tin</h2>
+                    <div style="font-size: 15px; line-height: 1.8; color: #444; text-align: justify; max-width: 900px;">
+                        <p style="margin-bottom: 12px;">Chúng tôi luôn cam kết bảo mật những thông tin, dữ liệu cá nhân của Khách hàng một cách tốt nhất theo quy định của pháp luật. Vì vậy, Chính sách Bảo vệ Dữ liệu cá nhân ("Chính sách") này được xây dựng để Khách hàng hiểu rõ hơn về mục đích, phạm vi thông tin mà chúng tôi xử lý dữ liệu cá nhân.</p>
+                        <p style="margin-bottom: 12px;">Chính sách này là một phần không thể tách rời của bản Hợp đồng, các Điều khoản và Điều kiện sử dụng Dịch vụ cung cấp tới Khách hàng.</p>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 1: Định nghĩa</h3>
+                        <ul style="margin-left: 25px; margin-bottom: 12px;">
+                            <li style="margin-bottom: 8px;"><b>Khách hàng:</b> là Khách hàng cá nhân đăng ký, sử dụng dịch vụ.</li>
+                            <li style="margin-bottom: 8px;"><b>Dữ liệu cá nhân:</b> là thông tin dưới dạng ký hiệu, chữ viết, chữ số, hình ảnh, âm thanh... gắn liền với một con người cụ thể.</li>
+                            <li style="margin-bottom: 8px;"><b>Xử lý dữ liệu cá nhân:</b> là một hoặc nhiều hoạt động tác động tới dữ liệu như: thu thập, ghi, phân tích, xác nhận, lưu trữ, chỉnh sửa, xóa, hủy dữ liệu.</li>
+                        </ul>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 2: Loại Dữ liệu được xử lý</h3>
+                        <p style="margin-bottom: 12px;">Các Dữ liệu cá nhân của Khách hàng có thể được thu thập và xử lý bao gồm:</p>
+                        <ul style="margin-left: 25px; margin-bottom: 12px;">
+                            <li style="margin-bottom: 8px;">Thông tin cá nhân: họ tên, số điện thoại, ngày tháng năm sinh... để liên lạc và khôi phục tài khoản.</li>
+                            <li style="margin-bottom: 8px;">Tên tài khoản, ảnh đại diện.</li>
+                            <li style="margin-bottom: 8px;">Thông tin về ứng dụng, trình duyệt và thiết bị sử dụng (IP, địa chỉ Wifi MAC, hệ điều hành).</li>
+                            <li style="margin-bottom: 8px;">Thông tin được bạn chia sẻ để tối ưu hóa nội dung hiển thị nhằm phục vụ tốt hơn.</li>
+                        </ul>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 3: Mục đích Xử lý dữ liệu cá nhân</h3>
+                        <p style="margin-bottom: 12px;">Khách hàng đồng ý cho phép Xử lý dữ liệu cá nhân với các mục đích như sau:</p>
+                        <ul style="margin-left: 25px; margin-bottom: 12px;">
+                            <li style="margin-bottom: 8px;">Để quản lý, điều hành, cung cấp Dịch vụ và tài khoản người dùng của Bạn.</li>
+                            <li style="margin-bottom: 8px;">Để giải quyết hoặc tạo điều kiện dịch vụ khách hàng, trả lời thắc mắc.</li>
+                            <li style="margin-bottom: 8px;">Để tiến hành các hoạt động nghiên cứu, phân tích và phát triển, cải thiện trải nghiệm khách hàng.</li>
+                            <li style="margin-bottom: 8px;">Vì mục đích tiếp thị, gửi thông tin và tài liệu quảng bá liên quan đến các sản phẩm/dịch vụ.</li>
+                            <li style="margin-bottom: 8px;">Để ngăn chặn hoặc điều tra hành vi vi phạm Điều Khoản Dịch Vụ, hoạt động gian lận, phi pháp.</li>
+                        </ul>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 4: Quyền của Khách hàng</h3>
+                        <p style="margin-bottom: 12px;">Khách hàng là chủ thể dữ liệu cá nhân của mình và có các quyền:</p>
+                        <ul style="margin-left: 25px; margin-bottom: 12px;">
+                            <li style="margin-bottom: 8px;">Quyền được biết về hoạt động xử lý dữ liệu.</li>
+                            <li style="margin-bottom: 8px;">Quyền truy cập để xem, chỉnh sửa hoặc yêu cầu xóa Dữ liệu cá nhân của mình.</li>
+                            <li style="margin-bottom: 8px;">Quyền rút lại sự đồng ý tại bất kỳ thời điểm nào.</li>
+                        </ul>
+
+                        <h3 style="font-size: 18px; margin-top: 25px; margin-bottom: 10px; font-weight: 700; color: var(--purple-primary);">Điều 5: Liên hệ</h3>
+                        <p style="margin-bottom: 12px;">Nếu Bạn có bất kỳ thắc mắc hoặc câu hỏi nào về Chính Sách này, vui lòng liên hệ với Chúng tôi tại địa chỉ Email hỗ trợ khách hàng của hệ thống: <b>hotro@lyrxmusic.com.vn</b>.</p>
+                    </div>
                 </div>
 
                 <div id="help-copyright" class="help-panel">
@@ -1121,7 +1386,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
                         <span style="background: #e6f0ff; color: #0052cc; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Leader in mobile</span>
                     </div>
                     <h3 style="font-size: 24px; margin-bottom: 15px; font-weight: 700; color: #333;">Liên hệ quảng cáo</h3>
-                    <p style="line-height: 1.6; color: #555; margin-bottom: 40px;">Khai thác các nền tảng quảng cáo, truyền thông số và giải trí hàng đầu Việt Nam gồm Zalo, Lyrx Music và Baomoi. Chúng tôi giúp bạn tăng khả năng nhận diện thương hiệu và rút ngắn hành trình chinh phục khách hàng. Điền thông tin của bạn ngay để nhận tư vấn miễn phí!</p>
+                    <p style="line-height: 1.6; color: #555; margin-bottom: 40px;">Khai thác các nền tảng quảng cáo, truyền thông số và giải trí hàng đầu Việt Nam. Chúng tôi giúp bạn tăng khả năng nhận diện thương hiệu và rút ngắn hành trình chinh phục khách hàng. Điền thông tin của bạn ngay để nhận tư vấn miễn phí!</p>
 
                     <div style="max-width: 700px;">
                         <div class="help-form-group"><label style="width: 180px;">Họ và tên *</label><input type="text" class="help-form-control"></div>
@@ -1189,7 +1454,5 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
             </div>
         </div>
     </div>
-
-
 </body>
 </html>

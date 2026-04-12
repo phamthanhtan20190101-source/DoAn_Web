@@ -21,7 +21,7 @@ $playlist = $plQuery->fetch_assoc();
 // 2. Lấy danh sách bài hát TRONG Playlist này (ĐÃ SỬA LỖI SQL TRÁNH GROUP BY STRICT MODE)
 $sqlSongs = "SELECT s.*, GROUP_CONCAT(a.Name SEPARATOR ', ') AS Artists,
              IF(uf.SongID IS NOT NULL, 1, 0) AS IsFavorite
-             FROM playlist_songs ps
+             FROM playlist_song ps
              JOIN songs s ON ps.SongID = s.SongID
              LEFT JOIN song_artist sa ON s.SongID = sa.SongID
              LEFT JOIN artists a ON sa.ArtistID = a.ArtistID
