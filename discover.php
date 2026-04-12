@@ -22,15 +22,13 @@ if ($banners && $banners->num_rows > 0) {
 
 // ================= 2. LẤY DỮ LIỆU BÀI HÁT (KÈM TRẠNG THÁI TIM) =================
 $username = isset($_SESSION['username']) ? $conn->real_escape_string($_SESSION['username']) : '';
-$sql = "SELECT s.SongID, s.Title, s.Duration, s.FilePath_URL, s.CoverImage_URL, 
-        GROUP_CONCAT(a.Name SEPARATOR ', ') AS Artists,
-        IF(uf.SongID IS NOT NULL, 1, 0) AS IsFavorite
-        FROM songs s
-        LEFT JOIN song_artist sa ON s.SongID = sa.SongID
-        LEFT JOIN artists a ON sa.ArtistID = a.ArtistID
-        LEFT JOIN user_favorites uf ON s.SongID = uf.SongID AND uf.Username = '$username'
-        GROUP BY s.SongID
-        ORDER BY s.SongID DESC";
+$sql = "SELECT s.*, GROUP_CONCAT(a.Name SEPARATOR ', ') as Artists 
+        FROM songs s 
+        LEFT JOIN song_artist sa ON s.SongID = sa.SongID 
+        LEFT JOIN artists a ON sa.ArtistID = a.ArtistID 
+        WHERE s.status = 1 
+        GROUP BY s.SongID 
+        ORDER BY s.ReleaseDate DESC LIMIT 10";
 $result = $conn->query($sql);
 $songsJSON = []; 
 $index = 0;   

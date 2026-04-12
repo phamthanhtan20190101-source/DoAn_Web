@@ -1,9 +1,11 @@
 <?php
 session_start();
-if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true || $_SESSION['role'] !== 'admin') {
-    echo '<div style="color:white;">Bạn không có quyền truy cập.</div>';
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
+    echo '<div style="color:white; text-align:center; margin-top:50px;">Bạn phải <b style="color:var(--purple-primary); cursor:pointer;" onclick="openLoginModal()">Đăng nhập</b> mới được đăng bài hát!</div>';
     exit();
+
 }
+
 
 $servername = "localhost"; $username = "root"; $password = "vertrigo"; $dbname = "song_management";
 $conn = new mysqli($servername, $username, $password, $dbname);

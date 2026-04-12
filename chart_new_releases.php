@@ -18,6 +18,7 @@ $sql = "SELECT s.*, GROUP_CONCAT(a.Name SEPARATOR ', ') AS Artists,
         LEFT JOIN artists a ON sa.ArtistID = a.ArtistID
         LEFT JOIN user_favorites uf ON s.SongID = uf.SongID AND uf.Username = '$username'
         WHERE s.ReleaseDate >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        AND status = 1
         GROUP BY s.SongID
         ORDER BY s.PlayCount DESC, s.ReleaseDate DESC
         LIMIT 100";

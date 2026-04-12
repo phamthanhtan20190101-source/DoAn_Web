@@ -15,6 +15,7 @@ $sql = "SELECT s.SongID, s.Title, s.Duration, s.FilePath_URL, s.CoverImage_URL,
         LEFT JOIN song_artist sa ON s.SongID = sa.SongID
         LEFT JOIN artists a ON sa.ArtistID = a.ArtistID
         WHERE uh.ListenedAt >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        AND s.status = 1
         GROUP BY s.SongID
         ORDER BY RecentPlays DESC
         LIMIT 10";

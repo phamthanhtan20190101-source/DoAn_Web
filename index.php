@@ -1,4 +1,16 @@
-<?php session_start(); ?>
+<?php 
+session_start(); 
+// Đếm số bài hát đang chờ duyệt (status = 0)
+$pendingCount = 0;
+if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+    $connCount = new mysqli("localhost", "root", "vertrigo", "song_management");
+    $resCount = $connCount->query("SELECT COUNT(*) as c FROM songs WHERE status = 0");
+    if ($resCount && $rowC = $resCount->fetch_assoc()) {
+        $pendingCount = $rowC['c'];
+    }
+    $connCount->close();
+}
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -305,7 +317,12 @@
                     <ul class="menu-list">
                         <li class="menu-item active" onclick="loadContent('admin_dashboard.php')"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
                         <li class="menu-item" onclick="loadContent('admin_banners.php')"><i class="fa-solid fa-images"></i> Quản lý Banner</li>
-                        <li class="menu-item" onclick="loadContent('approve_songs.php')"><i class="fa-solid fa-circle-check"></i> Duyệt bài hát</li>
+                        <li class="menu-item" onclick="loadContent('approve_songs.php')">
+    <i class="fa-solid fa-circle-check"></i> Duyệt bài hát
+    <?php if ($pendingCount > 0): ?>
+        <span style="background: #ef4444; color: white; border-radius: 50%; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; margin-left: auto;"><?php echo $pendingCount; ?></span>
+    <?php endif; ?>
+</li>
                     </ul>
                     <h3>Nội dung</h3>
                     <ul class="menu-list">
@@ -329,13 +346,13 @@
                         <li class="menu-item" onclick="loadContent('library.php')"><i class="fa-solid fa-layer-group"></i> Thư Viện</li>
                         <li class="menu-item active" onclick="loadContent('discover.php')"><i class="fa-regular fa-circle-dot"></i> Khám Phá</li>
                         <li class="menu-item" onclick="loadContent('lyrxchart.php')"><i class="fa-solid fa-chart-line"></i> #Lyrxchart</li>
-                        <li class="menu-item"><i class="fa-solid fa-podcast"></i> Phòng Nhạc <span class="live-badge">LIVE</span></li>
+                        <li class="menu-item" onclick="loadContent('add_song.php')"><i class="fa-solid fa-cloud-arrow-up"></i> Thêm bài hát</li>
                     </ul>
                     <div class="divider"></div>
                     <ul class="menu-list">
                         <li class="menu-item" onclick="loadContent('chart_new_releases.php')"><i class="fa-solid fa-music"></i> BXH Nhạc Mới</li>
                         <li class="menu-item" onclick="loadContent('topic_genre.php')"><i class="fa-solid fa-icons"></i> Chủ Đề & Thể Loại</li>
-                        <li class="menu-item"><i class="fa-regular fa-star"></i> Top 100</li>
+                        <li class="menu-item" onclick="loadContent('top100.php')"><i class="fa-regular fa-star"></i> Top 100</li>
                     </ul>
                     
                     <div class="btn-create-playlist-sidebar" onclick="checkAndCreatePlaylist()">
@@ -426,7 +443,7 @@
         </main>
     </div>
 
-    <?php if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin'): ?>
+    
     <footer class="player">
         <div class="player-left">
             <div class="song-thumb"></div>
@@ -458,7 +475,7 @@
             </div>
         </div>
     </footer>
-    <?php endif; ?>
+    
 
     <div id="loginModal" class="modal-overlay">
         <div class="modal-content">
