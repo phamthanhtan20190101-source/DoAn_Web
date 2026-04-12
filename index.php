@@ -687,20 +687,25 @@
     </script>
     <script src="player.js?v=<?php echo time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   /* ================= GIAO DIỆN LỜI BÀI HÁT ================= */
     <style>
         .lyric-panel { position: fixed; top: 100vh; left: 0; width: 100vw; height: calc(100vh - 90px); background: #170f23; z-index: 999; transition: top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); display: flex; overflow: hidden; }
         .lyric-panel.show { top: 0; }
         .lyric-bg-blur { position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; filter: blur(60px) brightness(0.4); background-size: cover; background-position: center; z-index: -1; transition: 1s; }
         .lyric-close-btn { position: absolute; top: 30px; right: 40px; font-size: 30px; color: white; cursor: pointer; z-index: 1000; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; transition: 0.3s; }
         .lyric-close-btn:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
-        .lyric-left { width: 45%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px; }
-        .lyric-left img { width: 350px; height: 350px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); margin-bottom: 30px; transition: 0.5s; }
-        .lyric-left h2 { color: white; font-size: 30px; font-weight: 800; text-align: center; margin-bottom: 10px; }
-        .lyric-left p { color: rgba(255,255,255,0.6); font-size: 18px; text-align: center; }
-        .lyric-right { width: 55%; height: 100%; overflow-y: auto; scroll-behavior: smooth; padding: 100px 50px 200px 0; scrollbar-width: none; }
+        
+        /* CHỈNH LẠI BÊN TRÁI: Nhỏ gọn hơn, bo góc mượt hơn */
+        .lyric-left { width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; }
+        .lyric-left img { width: 100%; max-width: 280px; aspect-ratio: 1/1; object-fit: cover; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); margin-bottom: 25px; transition: 0.5s; }
+        .lyric-left h2 { color: white; font-size: 26px; font-weight: 800; text-align: center; margin-bottom: 10px; }
+        .lyric-left p { color: rgba(255,255,255,0.6); font-size: 16px; text-align: center; }
+        
+        /* CHỈNH LẠI BÊN PHẢI: Chữ vừa vặn, thêm hiệu ứng Mask Gradient mờ dần ở 2 đầu (ZingMP3 Style) */
+        .lyric-right { width: 60%; height: 100%; overflow-y: auto; scroll-behavior: smooth; padding: 100px 50px 200px 20px; scrollbar-width: none; }
         .lyric-right::-webkit-scrollbar { display: none; }
-        .lyric-line { font-size: 36px; font-weight: 700; color: rgba(255,255,255,0.3); margin-bottom: 25px; transition: all 0.3s; cursor: pointer; transform-origin: left center; }
-        .lyric-line.active { color: #fff; font-size: 42px; text-shadow: 0 0 20px rgba(255,255,255,0.4); transform: scale(1.05); }
+        .lyric-line { font-size: 26px; font-weight: 700; color: rgba(255,255,255,0.3); margin-bottom: 25px; transition: all 0.3s; cursor: pointer; transform-origin: left center; }
+        .lyric-line.active { color: #fff; font-size: 32px; text-shadow: 0 0 15px rgba(255,255,255,0.4); transform: scale(1.02); }
     </style>
 
     <div id="lyricPanel" class="lyric-panel">

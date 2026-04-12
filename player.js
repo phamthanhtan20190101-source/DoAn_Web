@@ -326,14 +326,24 @@ function openLyricPanel() {
     // Tải lời bài hát từ Database
     document.getElementById('lyricContainer').innerHTML = '<div class="lyric-line" style="color:white; font-size:20px;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải lời bài hát...</div>';
     
+    // TÍNH NĂNG CHỐNG ĐẠN: Bắt mọi lỗi và hiển thị lên màn hình
     fetch(`get_lyrics.php?id=${song.id}`)
-        .then(res => res.json())
-        .then(data => {
-            parseLyrics(data.lyrics);
+        .then(res => res.text()) // Đọc dạng chữ thô trước để "bắt bệnh"
+        .then(text => {
+            try {
+                const data = JSON.parse(text);
+                parseLyrics(data.lyrics);
+            } catch(e) {
+                console.error("Lỗi dữ liệu JSON:", text);
+                parseLyrics("🎶 CẢNH BÁO: File get_lyrics.php đang bị lỗi PHP! 🎶\n\nNội dung lỗi là:\n" + text);
+            }
+            renderLyrics();
+        })
+        .catch(err => {
+            parseLyrics("🎶 Lỗi kết nối mạng hoặc không tìm thấy file get_lyrics.php 🎶");
             renderLyrics();
         });
 }
-
 function closeLyricPanel() {
     document.getElementById('lyricPanel').classList.remove('show');
 }
@@ -366,6 +376,40 @@ function parseLyrics(rawText) {
 }
 
 // In chữ ra màn hình
+// Thuật toán bóc tách thời gian (Chấp nhận mọi chuẩn LRC)
+function parseLyrics(rawText) {
+    parsedLyrics = [];
+    if (!rawText || rawText.trim() === '') {
+        parsedLyrics.push({ time: -1, text: "🎶 Chưa có lời bài hát cho ca khúc này 🎶" });
+        return;
+    }
+    
+    const lines = rawText.split('\n');
+    // Regex này bắt được cả [00:15], [00:15.5], [00:15.50], [00:15.500]
+    const regex = /\[(\d{2}):(\d{2})(?:\.(\d{1,3}))?\](.*)/; 
+    
+    lines.forEach(line => {
+        const match = line.match(regex);
+        if (match) {
+            const m = parseInt(match[1]);
+            const s = parseInt(match[2]);
+            const msStr = match[3] || '0'; 
+            
+            // Chuẩn hóa mili-giây
+            let ms = parseInt(msStr);
+            if (msStr.length === 1) ms *= 100;
+            else if (msStr.length === 2) ms *= 10;
+            
+            const time = m * 60 + s + (ms / 1000);
+            const text = match[4].trim();
+            if (text) parsedLyrics.push({ time, text });
+        } else if (line.trim() !== '') {
+            parsedLyrics.push({ time: -1, text: line.trim() });
+        }
+    });
+}
+
+// In chữ ra màn hình
 function renderLyrics() {
     const container = document.getElementById('lyricContainer');
     container.innerHTML = '';
@@ -376,7 +420,6 @@ function renderLyrics() {
         div.id = 'lyric-line-' + index;
         div.textContent = lyric.text;
         
-        // Bấm vào dòng chữ nào thì nhạc tua tới khúc đó
         if(lyric.time !== -1) {
             div.onclick = () => { 
                 currentAudio.currentTime = lyric.time; 
@@ -385,27 +428,26 @@ function renderLyrics() {
         }
         container.appendChild(div);
     });
-    activeLyricIndex = -1; // Reset
+    activeLyricIndex = -1;
 }
 
-// VÒNG LẶP KIỂM TRA THỜI GIAN NHẠC ĐỂ CHẠY CHỮ (Chạy ngầm liên tục)
+// VÒNG LẶP ĐỒNG BỘ THỜI GIAN NHẠC VÀ CHỮ
 setInterval(() => {
     const panel = document.getElementById('lyricPanel');
-    if (!currentAudio || currentAudio.paused || !panel.classList.contains('show') || parsedLyrics.length === 0 || parsedLyrics[0].time === -1) return;
+    // Bỏ check .paused để chữ vẫn tự focus đúng dòng kể cả khi đang tạm dừng nhạc
+    if (!currentAudio || !panel.classList.contains('show') || parsedLyrics.length === 0) return;
 
     const currentTime = currentAudio.currentTime;
     
-    // Tìm dòng hiện tại
+    // Tìm dòng lyric hiện tại
     let newActiveIndex = -1;
     for (let i = 0; i < parsedLyrics.length; i++) {
-        if (currentTime >= parsedLyrics[i].time) {
+        if (parsedLyrics[i].time !== -1 && currentTime >= parsedLyrics[i].time) {
             newActiveIndex = i;
-        } else {
-            break;
         }
     }
 
-    // Nếu chuyển sang dòng mới -> Đổi màu chữ và tự động cuộn (Scroll)
+    // Nếu nhảy sang dòng mới -> Đổi màu chữ và tự động cuộn
     if (newActiveIndex !== -1 && newActiveIndex !== activeLyricIndex) {
         if (activeLyricIndex !== -1) {
             const oldEl = document.getElementById('lyric-line-' + activeLyricIndex);
@@ -417,12 +459,10 @@ setInterval(() => {
         
         if (newEl) {
             newEl.classList.add('active');
-            // Cuộn cho dòng chữ luôn nằm ở giữa màn hình
             newEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }
-    
-}, 100);
+}, 50); // Tốc độ quét 50 mili-giây để chữ sáng lên ngay lập tức
 // ====================================================================
 // HÀM PHÁT NHẠC TỪ PLAYLIST (Được gọi từ nút bấm trên giao diện)
 // ====================================================================

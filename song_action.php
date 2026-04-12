@@ -225,7 +225,7 @@ try {
         exit();
     }
 
-    if ($action === 'update') {
+   if ($action === 'update') {
         $songId = intval(getPostValue('song_id'));
         $stmt = $conn->prepare('SELECT FilePath_URL FROM songs WHERE SongID = ?');
         $stmt->bind_param('i', $songId); $stmt->execute(); $stmt->bind_result($existingPath); $stmt->fetch(); $stmt->close();
@@ -233,6 +233,27 @@ try {
         $updatedFilePath = $existingPath;
         $updatedDuration = null;
 
+        // ===============================================================
+        // 1. XỬ LÝ UPLOAD ẢNH BÌA (COVER IMAGE) NẾU CÓ CHỌN ẢNH MỚI
+        // ===============================================================
+        if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
+            $coverDir = __DIR__ . '/uploads/covers';
+            if (!is_dir($coverDir)) mkdir($coverDir, 0755, true);
+            $coverName = uniqid('cover_', true) . '_' . basename($_FILES['cover_image']['name']);
+            $coverPath = $coverDir . '/' . $coverName;
+            
+            if (move_uploaded_file($_FILES['cover_image']['tmp_name'], $coverPath)) {
+                $dbCoverPath = 'uploads/covers/' . $coverName;
+                // Cập nhật riêng cột ảnh bìa vào CSDL
+                $stmtCover = $conn->prepare('UPDATE songs SET CoverImage_URL = ? WHERE SongID = ?');
+                $stmtCover->bind_param('si', $dbCoverPath, $songId);
+                $stmtCover->execute(); $stmtCover->close();
+            }
+        }
+
+        // ===============================================================
+        // 2. XỬ LÝ UPLOAD FILE NHẠC (MP3) NẾU CÓ CHỌN FILE MỚI
+        // ===============================================================
         if (isset($_FILES['audio_file']) && $_FILES['audio_file']['error'] === UPLOAD_ERR_OK) {
             validateMp3Upload($_FILES['audio_file']);
             $dest = __DIR__ . '/uploads/songs/' . uniqid('song_', true) . '.mp3';
@@ -242,7 +263,9 @@ try {
             if ($existingPath) safeUnlink(__DIR__ . '/' . ltrim($existingPath, '/'));
         }
 
-        // CẬP NHẬT CẢ ALBUM VÀ LYRICS VÀO CÂU LỆNH UPDATE
+        // ===============================================================
+        // 3. CẬP NHẬT THÔNG TIN CHỮ VÀ CA SĨ
+        // ===============================================================
         if ($updatedDuration !== null) {
             $stmt = $conn->prepare('UPDATE songs SET Title = ?, GenreID = ?, AlbumID = ?, ReleaseDate = ?, FilePath_URL = ?, Duration = ?, Lyrics = ? WHERE SongID = ?');
             $stmt->bind_param('siissssi', $title, $genreId, $albumId, $releaseDate, $updatedFilePath, $updatedDuration, $lyrics, $songId);
@@ -258,7 +281,7 @@ try {
         $stmt->close(); $conn->close();
         
         // Thêm chuyển hướng tự động bằng JS khi thành công
-        echo '<div style="color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px;">✅ Cập nhật bài hát thành công!</div>'; 
+        echo '<div style="color: #4ade80; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; padding: 15px; border-radius: 8px; font-weight: bold; margin-bottom: 20px;">✅ Cập nhật bài hát và ảnh bìa thành công!</div>'; 
         echo '<img src="x" onerror="setTimeout(() => loadContent(\'admin_songs.php\'), 1500)" style="display:none;">';
         exit();
     }
