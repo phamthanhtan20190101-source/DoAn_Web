@@ -1,14 +1,20 @@
 <?php 
 session_start(); 
+// Kết nối cơ sở dữ liệu để lấy cài đặt trang
+$conn = new mysqli("localhost", "root", "vertrigo", "song_management");
+$conn->set_charset('utf8mb4');
+
+// Lấy tên trang từ settings
+$resWeb = $conn->query("SELECT ConfigValue FROM settings WHERE ConfigKey = 'site_name'");
+$siteTitle = ($resWeb && $rowW = $resWeb->fetch_assoc()) ? $rowW['ConfigValue'] : 'Lyrx Music';
+
 // Đếm số bài hát đang chờ duyệt (status = 0)
 $pendingCount = 0;
 if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-    $connCount = new mysqli("localhost", "root", "vertrigo", "song_management");
-    $resCount = $connCount->query("SELECT COUNT(*) as c FROM songs WHERE status = 0");
+    $resCount = $conn->query("SELECT COUNT(*) as c FROM songs WHERE status = 0");
     if ($resCount && $rowC = $resCount->fetch_assoc()) {
         $pendingCount = $rowC['c'];
     }
-    $connCount->close();
 }
 ?>
 <!DOCTYPE html>
@@ -16,7 +22,7 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lyrx - Đồ án Lập trình Web</title>
+    <title><?php echo $siteTitle; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -617,10 +623,25 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
                                     <div class="settings-submenu" style="width: 250px;">
                                         <div class="setting-group">
                                             <div class="setting-group-title">Chủ đề <i class="fa-solid fa-chevron-right" style="margin-left: auto; font-size: 12px; color: gray;"></i></div>
-                                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-                                                <div style="width: 60px; height: 40px; border-radius: 5px; background: linear-gradient(135deg, #28104e, #9b4de0); border: 1px solid var(--purple-primary);"></div>
-                                                <span style="color: white; font-weight: bold; font-size: 14px;">Tím</span>
-                                            </div>
+                                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; margin-bottom: 20px;">
+    <div onclick="setTheme('purple')" style="cursor:pointer; text-align:center;">
+        <div style="height: 45px; border-radius: 6px; background: linear-gradient(135deg, #28104e, #9b4de0); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 5px;"></div>
+        <span style="font-size: 11px; color: white;">Tím</span>
+    </div>
+    <div onclick="setTheme('dark')" style="cursor:pointer; text-align:center;">
+        <div style="height: 45px; border-radius: 6px; background: #101010; border: 1px solid #333; margin-bottom: 5px;"></div>
+        <span style="font-size: 11px; color: white;">Tối</span>
+    </div>
+    <div onclick="setTheme('blue')" style="cursor:pointer; text-align:center;">
+        <div style="height: 45px; border-radius: 6px; background: #061d4f; border: 1px solid #1da1f2; margin-bottom: 5px;"></div>
+        <span style="font-size: 11px; color: white;">Xanh biển</span>
+    </div>
+    <div onclick="setTheme('green')" style="cursor:pointer; text-align:center;">
+        <div style="height: 45px; border-radius: 6px; background: #123532; border: 1px solid #00ff88; margin-bottom: 5px;"></div>
+        <span style="font-size: 11px; color: white;">Xanh lá</span>
+    </div>
+</div>
+
                                             <div class="settings-divider"></div>
                                             <div class="setting-row" style="margin-top: 15px; margin-bottom: 0;">
                                                 <span>Hiệu ứng chuyển động</span><label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
@@ -1220,6 +1241,39 @@ window.submitAdminEditPlaylist = function() {
         showGlobalNotify("Lỗi kết nối máy chủ!", false);
     });
 };
+/* ================= CHỈNH MÀU GIAO DIỆN ================= */
+/* ================= CHỨC NĂNG ĐỔI MÀU GIAO DIỆN (THEME) ================= */
+/* ================= CHỨC NĂNG ĐỔI MÀU GIAO DIỆN (THEME) ================= */
+const lyrxThemes = {
+    purple: { '--bg-body': '#170f23', '--bg-sidebar': '#231b2e', '--bg-header': '#170f23', '--bg-player': '#120c1c', '--purple-primary': '#9b4de0' },
+    dark: { '--bg-body': '#101010', '--bg-sidebar': '#181818', '--bg-header': '#101010', '--bg-player': '#050505', '--purple-primary': '#ffffff' },
+    blue: { '--bg-body': '#061d4f', '--bg-sidebar': '#06153b', '--bg-header': '#061d4f', '--bg-player': '#041334', '--purple-primary': '#1da1f2' },
+    green: { '--bg-body': '#123532', '--bg-sidebar': '#0e2e2b', '--bg-header': '#123532', '--bg-player': '#0c2724', '--purple-primary': '#00ff88' }
+};
+
+// Hàm tạo mã định danh riêng cho từng user để lưu màu
+function getThemeKey() {
+    // Nếu chưa đăng nhập thì dùng key mặc định, nếu có thì gắn tên user vào sau
+    return userInfo.username ? 'lyrx_theme_' + userInfo.username : 'lyrx_theme_guest';
+}
+
+window.setTheme = function(themeName) {
+    const colors = lyrxThemes[themeName];
+    if (!colors) return;
+    for (let variable in colors) {
+        document.documentElement.style.setProperty(variable, colors[variable]);
+    }
+    // Lưu màu dựa trên Key riêng của tài khoản đó
+    localStorage.setItem(getThemeKey(), themeName);
+};
+
+// Tự động nạp lại theme đúng của tài khoản khi tải trang
+(function() {
+    const savedTheme = localStorage.getItem(getThemeKey()) || 'purple';
+    setTheme(savedTheme);
+})();
+
+
     </script>
     <script src="player.js?v=<?php echo time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
