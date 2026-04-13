@@ -19,6 +19,12 @@ if (!isset($_SESSION['username'])) {
 
 $username = $conn->real_escape_string($_SESSION['username']);
 $accountId = isset($_SESSION['account_id']) ? intval($_SESSION['account_id']) : 0;
+if ($accountId <= 0) {
+    $accountRes = $conn->query("SELECT AccountID FROM account WHERE Username = '$username' LIMIT 1");
+    if ($accountRes && $accountRow = $accountRes->fetch_assoc()) {
+        $accountId = intval($accountRow['AccountID']);
+    }
+}
 $action = $_POST['action'] ?? '';
 $songId = intval($_POST['song_id'] ?? 0);
 
@@ -57,17 +63,27 @@ elseif ($action === 'create_playlist') {
     $isAdmin = (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ? 1 : 0;
     $img = 'https://cdn-icons-png.flaticon.com/512/3293/3293810.png';
 
-    if (!empty($title) && $accountId > 0) {
-        if (isset($_FILES['playlist_image']) && $_FILES['playlist_image']['error'] == 0) {
-            $path = "uploads/playlists/pl_" . time() . "." . pathinfo($_FILES['playlist_image']['name'], PATHINFO_EXTENSION);
-            if (!is_dir('uploads/playlists/')) mkdir('uploads/playlists/', 0777, true);
-            if (move_uploaded_file($_FILES['playlist_image']['tmp_name'], $path)) $img = $path;
-        }
-        $stmt = $conn->prepare("INSERT INTO playlists (AccountID, Title, IsAdmin, Image_URL) VALUES (?, ?, ?, ?)");
-        $stmt->bind_param("isis", $accountId, $title, $isAdmin, $img);
-        echo json_encode(['success' => $stmt->execute(), 'message' => 'Xử lý hoàn tất!']);
-        $stmt->close();
+    if (empty($title)) {
+        echo json_encode(['success' => false, 'message' => 'Vui lòng nhập tên playlist!']);
+        exit;
     }
+
+    if ($accountId <= 0) {
+        echo json_encode(['success' => false, 'message' => 'Không xác định được tài khoản. Vui lòng đăng nhập lại.']);
+        exit;
+    }
+
+    if (isset($_FILES['playlist_image']) && $_FILES['playlist_image']['error'] == 0) {
+        $path = "uploads/playlists/pl_" . time() . "." . pathinfo($_FILES['playlist_image']['name'], PATHINFO_EXTENSION);
+        if (!is_dir('uploads/playlists/')) mkdir('uploads/playlists/', 0777, true);
+        if (move_uploaded_file($_FILES['playlist_image']['tmp_name'], $path)) $img = $path;
+    }
+
+    $stmt = $conn->prepare("INSERT INTO playlists (AccountID, Title, IsAdmin, Image_URL) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("isis", $accountId, $title, $isAdmin, $img);
+    $success = $stmt->execute();
+    echo json_encode(['success' => $success, 'message' => $success ? 'Đã tạo playlist thành công!' : 'Tạo playlist thất bại.']);
+    $stmt->close();
 }
 
 // LẤY DANH SÁCH PLAYLIST USER (Phần này nãy mình bị thiếu nè!)

@@ -1034,7 +1034,23 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
 
         window.deleteCategory = function(type, id) {
             if (!confirm('Bạn có chắc muốn xóa?')) return;
-            fetch('category_action.php', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'delete', type: type, id: id}) }).then(res => res.json()).then(data => { showGlobalNotify(data.message, data.success); if (data.success) { const reloadMap = { 'genre': 'admin_genres.php', 'artist': 'admin_artists.php', 'album': 'admin_albums.php', 'comment': 'admin_comments.php', 'banner': 'admin_banners.php' }; loadContent(reloadMap[type]); } });
+            fetch('category_action.php', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'delete', type: type, id: id}) }).then(res => res.json()).then(data => {
+                showGlobalNotify(data.message, data.success);
+                if (data.success) {
+                    const reloadMap = {
+                        'genre': 'admin_genres.php',
+                        'artist': 'admin_artists.php',
+                        'album': 'admin_albums.php',
+                        'comment': 'admin_comments.php',
+                        'banner': 'admin_banners.php',
+                        'playlist': 'admin_playlists.php'
+                    };
+                    const reloadUrl = reloadMap[type];
+                    if (reloadUrl) {
+                        loadContent(reloadUrl);
+                    }
+                }
+            });
         };
 
         window.toggleFavorite = function(songId, btn) {
