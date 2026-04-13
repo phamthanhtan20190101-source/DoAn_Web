@@ -732,41 +732,35 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
     </div>
     
     <div id="adminCreatePlModal" class="modal-overlay" style="z-index: 2500;">
-    <div class="modal-content" style="width: 350px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;">
-        <h3 style="color: white; margin-bottom: 20px; font-size: 18px;">Tạo playlist mẫu (Admin)</h3>
+    <div class="modal-content" style="width: 400px; background: var(--bg-sidebar); border-radius: 12px; padding: 25px;">
+        <h3 style="color: white; margin-bottom: 20px;">Tạo playlist mẫu (Admin)</h3>
+        <input type="text" id="adminPlTitleInput" placeholder="Nhập tên playlist..." style="width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
         
-        <input type="text" id="adminPlTitleInput" placeholder="Nhập tên playlist mẫu..." 
-               style="width: 100%; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; margin-bottom: 25px; outline: none; text-align: center; font-size: 14px;">
-        
-        <div style="display: flex; justify-content: space-between; gap: 10px;">
-            <button onclick="document.getElementById('adminCreatePlModal').style.display='none'" 
-                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: 600;">Hủy</button>
-            
-            <button onclick="submitAdminCreatePlaylist()" 
-                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: var(--purple-primary); color: white; cursor: pointer; font-weight: 600;">TẠO MỚI</button>
+        <label style="color: #aaa; display: block; text-align: left; margin-bottom: 5px; font-size: 13px;">Ảnh bìa Playlist:</label>
+        <input type="file" id="adminPlImageInput" accept="image/*" style="width: 100%; color: white; margin-bottom: 20px;">
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="document.getElementById('adminCreatePlModal').style.display='none'" style="flex:1; background: #444;">Hủy</button>
+            <button onclick="submitAdminCreatePlaylist()" style="flex:1; background: var(--purple-primary);">TẠO MỚI</button>
         </div>
     </div>
 </div>
 
-    <div id="adminEditPlModal" class="modal-overlay" style="z-index: 2500;">
-    <div class="modal-content" style="width: 350px; background: var(--bg-sidebar); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px;">
-        <h3 style="color: white; margin-bottom: 20px; font-size: 18px;">Chỉnh sửa Playlist mẫu</h3>
+<div id="adminEditPlModal" class="modal-overlay" style="z-index: 2500;">
+    <div class="modal-content" style="width: 400px; background: var(--bg-sidebar); border-radius: 12px; padding: 25px;">
+        <h3 style="color: white; margin-bottom: 20px;">Sửa playlist mẫu</h3>
+        <input type="hidden" id="editPlId">
+        <input type="text" id="editPlTitleInput" style="width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
         
-        <input type="hidden" id="editPlId"> 
-        
-        <input type="text" id="editPlTitleInput" placeholder="Nhập tên mới..." 
-               style="width: 100%; padding: 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.2); color: white; margin-bottom: 25px; outline: none; text-align: center; font-size: 14px;">
-        
-        <div style="display: flex; justify-content: space-between; gap: 10px;">
-            <button onclick="document.getElementById('adminEditPlModal').style.display='none'" 
-                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: 600;">Hủy</button>
-            
-            <button onclick="submitAdminEditPlaylist()" 
-                    style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: #3b82f6; color: white; cursor: pointer; font-weight: 600;">LƯU THAY ĐỔI</button>
+        <label style="color: #aaa; display: block; text-align: left; margin-bottom: 5px; font-size: 13px;">Thay đổi ảnh bìa (để trống nếu giữ nguyên):</label>
+        <input type="file" id="editPlImageInput" accept="image/*" style="width: 100%; color: white; margin-bottom: 20px;">
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="document.getElementById('adminEditPlModal').style.display='none'" style="flex:1; background: #444;">Hủy</button>
+            <button onclick="submitAdminEditPlaylist()" style="flex:1; background: #3b82f6;">LƯU THAY ĐỔI</button>
         </div>
     </div>
 </div>
-
 
     <script>
         function checkAndCreatePlaylist() {
@@ -1148,36 +1142,73 @@ if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         });
         // 1. Hàm này chỉ để mở cái khung Modal lên
 // --- THAY THẾ ĐOẠN TẠO PLAYLIST BẰNG ĐOẠN NÀY ---
+/* ================= QUẢN LÝ PLAYLIST MẪU (ADMIN) ================= */
+
+// 1. Hàm mở Modal tạo mới
 window.openAdminCreatePlaylist = function() {
-    console.log("Đang mở Modal tạo playlist mẫu...");
     const modal = document.getElementById('adminCreatePlModal');
     if (modal) {
         modal.style.display = 'flex';
         document.getElementById('adminPlTitleInput').value = ''; 
+        document.getElementById('adminPlImageInput').value = ''; 
         document.getElementById('adminPlTitleInput').focus();   
-    } else {
-        alert("Lỗi: Không tìm thấy khung adminCreatePlModal trong index.php! Vy kiểm tra lại dòng 666 nhé.");
     }
 };
 
+// 2. Hàm xử lý gửi dữ liệu Tạo mới
 window.submitAdminCreatePlaylist = function() {
     const title = document.getElementById('adminPlTitleInput').value.trim();
-    console.log("Tên playlist Admin nhập: " + title);
+    const imageFile = document.getElementById('adminPlImageInput').files[0];
     
-    if (title === "") {
-        showGlobalNotify("Vui lòng nhập tên playlist!", false);
-        return;
-    }
+    if (title === "") { showGlobalNotify("Vui lòng nhập tên!", false); return; }
 
-    fetch('user_action.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: 'action=create_playlist&title=' + encodeURIComponent(title)
-    })
+    const formData = new FormData();
+    formData.append('action', 'create_playlist');
+    formData.append('title', title);
+    if (imageFile) formData.append('playlist_image', imageFile);
+
+    fetch('user_action.php', { method: 'POST', body: formData })
     .then(res => res.json())
     .then(data => {
         if(data.success) {
             document.getElementById('adminCreatePlModal').style.display = 'none';
+            showGlobalNotify(data.message, true);
+            loadContent('admin_playlists.php');
+        } else showGlobalNotify(data.message, false);
+    });
+};
+
+// 3. Hàm mở Modal Sửa (Cần truyền ID và Tên cũ vào)
+window.openAdminEditPlaylist = function(id, title) {
+    const modal = document.getElementById('adminEditPlModal');
+    if (modal) {
+        document.getElementById('editPlId').value = id;
+        document.getElementById('editPlTitleInput').value = title;
+        document.getElementById('editPlImageInput').value = ""; // Reset ô chọn ảnh
+        modal.style.display = 'flex';
+        document.getElementById('editPlTitleInput').focus();
+    }
+};
+
+// 4. Hàm xử lý gửi dữ liệu Cập nhật (Nút Lưu thay đổi)
+window.submitAdminEditPlaylist = function() {
+    const id = document.getElementById('editPlId').value;
+    const title = document.getElementById('editPlTitleInput').value.trim();
+    const imageFile = document.getElementById('editPlImageInput').files[0];
+
+    if (title === "") { showGlobalNotify("Tên không được để trống!", false); return; }
+
+    const formData = new FormData();
+    formData.append('action', 'edit_playlist');
+    formData.append('playlist_id', id);
+    formData.append('title', title);
+    if (imageFile) formData.append('playlist_image', imageFile);
+
+    fetch('user_action.php', { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            document.getElementById('adminEditPlModal').style.display = 'none';
             showGlobalNotify(data.message, true);
             loadContent('admin_playlists.php'); 
         } else {
@@ -1185,42 +1216,10 @@ window.submitAdminCreatePlaylist = function() {
         }
     })
     .catch(err => {
-        console.error("Lỗi hệ thống:", err);
+        console.error("Lỗi:", err);
         showGlobalNotify("Lỗi kết nối máy chủ!", false);
     });
 };
-let currentEditId = 0;
-
-function openAdminEditPlaylist(id, title) {
-    currentEditId = id;
-    document.getElementById('adminEditPlModal').style.display = 'flex';
-    document.getElementById('editPlTitleInput').value = title;
-    document.getElementById('editPlTitleInput').focus();
-}
-
-function submitAdminEditPlaylist() {
-    const newTitle = document.getElementById('editPlTitleInput').value.trim();
-    if (newTitle === "") {
-        showGlobalNotify("Tên không được để trống!", false);
-        return;
-    }
-
-    fetch('user_action.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `action=edit_playlist&playlist_id=${currentEditId}&title=${encodeURIComponent(newTitle)}`
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.success) {
-            document.getElementById('adminEditPlModal').style.display = 'none';
-            showGlobalNotify(data.message, true);
-            loadContent('admin_playlists.php'); // Tải lại bảng
-        } else {
-            showGlobalNotify(data.message, false);
-        }
-    });
-}
     </script>
     <script src="player.js?v=<?php echo time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
