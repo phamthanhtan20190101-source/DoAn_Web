@@ -529,3 +529,59 @@ window.playPlaylist = function(index, dataId = 'current-playlist-data') {
     currentIndex = index;
     loadAndPlaySong();
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Tìm đúng thanh tiến trình
+    let progressWrapper = document.querySelector('.progress-container') || document.querySelector('.progress-bar')?.parentElement;
+    if (!progressWrapper) return;
+
+    // 1. Tạo Tooltip và gắn thẳng vào Body (chống bị cắt bởi CSS overflow: hidden)
+    const tooltip = document.createElement('div');
+    tooltip.id = 'lyrx-hover-tooltip';
+    tooltip.style.position = 'absolute';
+    tooltip.style.background = 'var(--purple-primary, #9b4de0)'; // Nền tím cực xịn
+    tooltip.style.color = '#fff';
+    tooltip.style.padding = '4px 8px';
+    tooltip.style.borderRadius = '4px';
+    tooltip.style.fontSize = '12px';
+    tooltip.style.fontWeight = 'bold';
+    tooltip.style.pointerEvents = 'none'; // Cho phép click xuyên qua tooltip
+    tooltip.style.opacity = '0';
+    tooltip.style.transform = 'translate(-50%, -100%)'; // Căn giữa theo đầu chuột
+    tooltip.style.transition = 'opacity 0.1s ease';
+    tooltip.style.boxShadow = '0 2px 10px rgba(0,0,0,0.5)';
+    tooltip.style.zIndex = '999999'; // Đảm bảo nổi lên trên tất cả mọi thứ
+    
+    document.body.appendChild(tooltip);
+
+    // 2. Bắt sự kiện lia chuột
+    progressWrapper.addEventListener('mousemove', (e) => {
+        // SỬA LỖI Ở ĐÂY: Dùng trực tiếp currentAudio, bỏ window.
+        if (typeof currentAudio === 'undefined' || !currentAudio || isNaN(currentAudio.duration)) return;
+
+        const rect = progressWrapper.getBoundingClientRect();
+        let offsetX = e.clientX - rect.left;
+
+        // Chống lố ra ngoài vạch
+        if (offsetX < 0) offsetX = 0;
+        if (offsetX > rect.width) offsetX = rect.width;
+
+        // Tính thời gian
+        const percent = offsetX / rect.width;
+        const hoverTime = percent * currentAudio.duration;
+
+        const mins = Math.floor(hoverTime / 60);
+        const secs = Math.floor(hoverTime % 60);
+        tooltip.textContent = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+        // Di chuyển tooltip bám sát đầu chuột
+        tooltip.style.left = `${e.pageX}px`;
+        tooltip.style.top = `${rect.top + window.scrollY - 10}px`; // Cách thanh 10px về phía trên
+        tooltip.style.opacity = '1';
+    });
+
+    // 3. Ẩn khi rút chuột ra
+    progressWrapper.addEventListener('mouseleave', () => {
+        tooltip.style.opacity = '0';
+    });
+});
